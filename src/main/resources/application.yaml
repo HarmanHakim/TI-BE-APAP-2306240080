@@ -1,6 +1,6 @@
 spring:
   application:
-    name: tugas_individu
+    name: flight_be
 
   mvc:
     hiddenmethod:

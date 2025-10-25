@@ -1,10 +1,10 @@
-package io.harman.tugas_individu;
+package io.harman.flight_be;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TugasIndividuApplicationTests {
+class FlightBeApplicationTests {
 
 	@Test
 	void contextLoads() {
