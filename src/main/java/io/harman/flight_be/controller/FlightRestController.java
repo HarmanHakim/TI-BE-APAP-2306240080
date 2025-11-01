@@ -1,0 +1,266 @@
+package io.harman.flight_be.controller;
+
+import io.harman.flight_be.dto.flight.*;
+import io.harman.flight_be.dto.rest.BaseResponseDTO;
+import io.harman.flight_be.service.FlightService;
+import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/flights")
+public class FlightRestController {
+
+    private final FlightService flightService;
+
+    public FlightRestController(FlightService flightService) {
+        this.flightService = flightService;
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getAllFlights(
+            @RequestParam(required = false) String origin,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureDate,
+            @RequestParam(required = false) String airlineId,
+            @RequestParam(required = false) Integer status) {
+        
+        var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
+
+        try {
+            List<ReadFlightDto> flights;
+            
+            if (origin != null || destination != null || departureDate != null || airlineId != null || status != null) {
+                flights = flightService.searchFlights(origin, destination, departureDate, airlineId, status);
+            } else {
+                flights = flightService.getAllActiveFlights();
+            }
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(flights);
+            baseResponseDTO.setMessage("Flights retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve flights: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BaseResponseDTO<ReadFlightDto>> getFlightById(@PathVariable String id) {
+        var baseResponseDTO = new BaseResponseDTO<ReadFlightDto>();
+
+        try {
+            ReadFlightDto flight = flightService.getFlightById(id);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(flight);
+            baseResponseDTO.setMessage("Flight retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (RuntimeException e) {
+            baseResponseDTO.setStatus(HttpStatus.NOT_FOUND.value());
+            baseResponseDTO.setMessage(e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.NOT_FOUND);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve flight: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<BaseResponseDTO<ReadFlightDto>> createFlight(
+            @Valid @RequestBody CreateFlightDto createFlightDto,
+            BindingResult bindingResult) {
+
+        var baseResponseDTO = new BaseResponseDTO<ReadFlightDto>();
+
+        if (bindingResult.hasFieldErrors()) {
+            StringBuilder errorMessages = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            for (FieldError error : errors) {
+                errorMessages.append(error.getDefaultMessage()).append("; ");
+            }
+
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(errorMessages.toString());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            ReadFlightDto flight = flightService.createFlight(createFlightDto);
+
+            baseResponseDTO.setStatus(HttpStatus.CREATED.value());
+            baseResponseDTO.setData(flight);
+            baseResponseDTO.setMessage("Flight created successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.CREATED);
+
+        } catch (RuntimeException e) {
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to create flight: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/{id}/update")
+    public ResponseEntity<BaseResponseDTO<ReadFlightDto>> updateFlight(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateFlightDto updateFlightDto,
+            BindingResult bindingResult) {
+
+        var baseResponseDTO = new BaseResponseDTO<ReadFlightDto>();
+
+        if (bindingResult.hasFieldErrors()) {
+            StringBuilder errorMessages = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            for (FieldError error : errors) {
+                errorMessages.append(error.getDefaultMessage()).append("; ");
+            }
+
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(errorMessages.toString());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            updateFlightDto.setId(id);
+            ReadFlightDto flight = flightService.updateFlight(updateFlightDto);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(flight);
+            baseResponseDTO.setMessage("Flight updated successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (RuntimeException e) {
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to update flight: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/{id}/delete")
+    public ResponseEntity<BaseResponseDTO<?>> cancelFlight(@PathVariable String id) {
+        var baseResponseDTO = new BaseResponseDTO<>();
+
+        try {
+            flightService.deleteFlight(id);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setMessage("Flight cancelled successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (RuntimeException e) {
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to cancel flight: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/upcoming")
+    public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getUpcomingFlights() {
+        var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
+
+        try {
+            List<ReadFlightDto> flights = flightService.getUpcomingFlights();
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(flights);
+            baseResponseDTO.setMessage("Upcoming flights retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve upcoming flights: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/today")
+    public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getFlightsDepartingToday() {
+        var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
+
+        try {
+            List<ReadFlightDto> flights = flightService.getFlightsDepartingToday();
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(flights);
+            baseResponseDTO.setMessage("Today's flights retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve today's flights: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getFlightsWithAvailableSeats() {
+        var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
+
+        try {
+            List<ReadFlightDto> flights = flightService.getFlightsWithAvailableSeats();
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(flights);
+            baseResponseDTO.setMessage("Flights with available seats retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve flights: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+}
