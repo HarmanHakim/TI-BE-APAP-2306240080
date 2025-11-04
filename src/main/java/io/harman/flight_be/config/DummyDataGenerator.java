@@ -31,14 +31,6 @@ import io.harman.flight_be.service.ClassFlightService;
 import io.harman.flight_be.service.FlightService;
 import io.harman.flight_be.service.PassengerService;
 import io.harman.flight_be.service.SeatService;
-import io.harman.flight_be.repository.AirlineRepository;
-import io.harman.flight_be.repository.AirplaneRepository;
-import io.harman.flight_be.repository.BookingRepository;
-import io.harman.flight_be.repository.BookingPassengerRepository;
-import io.harman.flight_be.repository.ClassFlightRepository;
-import io.harman.flight_be.repository.FlightRepository;
-import io.harman.flight_be.repository.PassengerRepository;
-import io.harman.flight_be.repository.SeatRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
@@ -53,41 +45,11 @@ public class DummyDataGenerator {
     private final SeatService seatService;
     private final BookingService bookingService;
     
-    // Repositories for cleanup
-    private final BookingPassengerRepository bookingPassengerRepository;
-    private final BookingRepository bookingRepository;
-    private final SeatRepository seatRepository;
-    private final ClassFlightRepository classFlightRepository;
-    private final FlightRepository flightRepository;
-    private final AirplaneRepository airplaneRepository;
-    private final PassengerRepository passengerRepository;
-    private final AirlineRepository airlineRepository;
-
-    private void cleanupExistingData() {
-        System.out.println("\n[CLEANUP] Removing existing data...");
-        try {
-            // Delete in reverse order of dependencies
-            bookingPassengerRepository.deleteAll();
-            bookingRepository.deleteAll();
-            seatRepository.deleteAll();
-            classFlightRepository.deleteAll();
-            flightRepository.deleteAll();
-            airplaneRepository.deleteAll();
-            passengerRepository.deleteAll();
-            airlineRepository.deleteAll();
-            System.out.println("[CLEANUP] ✓ All existing data removed successfully");
-        } catch (Exception e) {
-            System.err.println("[CLEANUP] ✗ Error during cleanup: " + e.getMessage());
-        }
-    }
-
     public void generate() {
         System.out.println("=".repeat(60));
         System.out.println("Generating dummy data for Flight Booking System...");
         System.out.println("=".repeat(60));
         
-        // Clean up existing data first
-        cleanupExistingData();
 
         Faker faker = new Faker(Locale.of("id", "ID"));
         Random random = new Random();
