@@ -14,10 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateAirplaneDto {
-    @NotBlank(message = "Airplane ID is required")
-    @Size(max = 255, message = "Airplane ID must not exceed 255 characters")
-    private String id;
-
     @NotBlank(message = "Airline ID is required")
     @Size(max = 3, min = 3, message = "Airline ID must be exactly 3 characters")
     private String airlineId;

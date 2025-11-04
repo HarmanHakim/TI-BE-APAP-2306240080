@@ -1,16 +1,21 @@
 package io.harman.flight_be.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import io.harman.flight_be.dto.flight.CreateFlightDto;
 import io.harman.flight_be.dto.flight.ReadFlightDto;
 import io.harman.flight_be.dto.flight.UpdateFlightDto;
 import io.harman.flight_be.model.Flight;
-import io.harman.flight_be.repository.*;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
+import io.harman.flight_be.repository.AirlineRepository;
+import io.harman.flight_be.repository.AirplaneRepository;
+import io.harman.flight_be.repository.BookingRepository;
+import io.harman.flight_be.repository.FlightRepository;
 
 @Service
 @Transactional
@@ -90,7 +95,7 @@ public class FlightServiceImpl implements FlightService {
                 .gate(createFlightDto.getGate())
                 .baggageAllowance(createFlightDto.getBaggageAllowance())
                 .facilities(createFlightDto.getFacilities())
-                .status(1) // Scheduled
+                .status(createFlightDto.getStatus() != null ? createFlightDto.getStatus() : 1) // Use provided status or default to Scheduled
                 .isDeleted(false)
                 .build();
 
@@ -297,6 +302,20 @@ public class FlightServiceImpl implements FlightService {
 
         String statusLabel = getStatusLabel(flight.getStatus());
 
+        // Map classes to ClassFlightSummary
+        List<ReadFlightDto.ClassFlightSummary> classesSummary = new ArrayList<>();
+        if (flight.getClasses() != null && !flight.getClasses().isEmpty()) {
+            classesSummary = flight.getClasses().stream()
+                    .map(classFlight -> ReadFlightDto.ClassFlightSummary.builder()
+                            .id(classFlight.getId())
+                            .classType(classFlight.getClassType())
+                            .seatCapacity(classFlight.getSeatCapacity())
+                            .availableSeats(classFlight.getAvailableSeats())
+                            .price(classFlight.getPrice())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
         return ReadFlightDto.builder()
                 .id(flight.getId())
                 .airlineId(flight.getAirlineId())
@@ -314,6 +333,7 @@ public class FlightServiceImpl implements FlightService {
                 .facilities(flight.getFacilities())
                 .status(flight.getStatus())
                 .statusLabel(statusLabel)
+                .classes(classesSummary)
                 .createdAt(flight.getCreatedAt())
                 .updatedAt(flight.getUpdatedAt())
                 .isDeleted(flight.getIsDeleted())

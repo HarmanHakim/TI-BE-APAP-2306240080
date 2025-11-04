@@ -97,6 +97,23 @@ public class DummyDataGenerator {
         List<String> flightIds = new ArrayList<>();
         String[] airports = { "CGK", "SUB", "DPS", "UPG", "KNO", "BPN", "SOC", "PLM", "PDG", "JOG",
                 "BDO", "PKU", "BTH", "TKG", "SRG", "MDC", "AMQ", "MLG", "SBY", "HLP" };
+        String[] terminals = { "1A", "1B", "1C", "2", "2A", "2B", "2C", "2D", "2E", "2F", "3", "3A", "3B" };
+        String[] gates = { "A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3", "B4", "B5", 
+                          "C1", "C2", "C3", "C4", "C5", "D1", "D2", "D3", "D4", "D5" };
+        String[] facilitiesList = {
+            "WiFi, In-flight Entertainment, Meal",
+            "WiFi, Meal, Blanket",
+            "In-flight Entertainment, Snacks",
+            "WiFi, In-flight Entertainment",
+            "Meal, Blanket, Pillow",
+            "WiFi, Meal, In-flight Entertainment, Power Outlet",
+            "In-flight Entertainment, Meal, Blanket, Pillow",
+            "WiFi, Snacks",
+            "Meal, In-flight Entertainment",
+            "WiFi, Meal, Blanket, Pillow, Power Outlet"
+        };
+        // Flight status: 1=Scheduled, 2=In Flight, 3=Finished, 4=Delayed, 5=Cancelled
+        Integer[] flightStatuses = { 1, 1, 1, 1, 1, 2, 2, 4, 4, 4 }; // Mostly scheduled, some in-flight/delayed
 
         for (int i = 0; i < 20; i++) {
             try {
@@ -123,7 +140,11 @@ public class DummyDataGenerator {
                         .destinationAirportCode(destination)
                         .departureTime(departureTime)
                         .arrivalTime(arrivalTime)
+                        .terminal(terminals[random.nextInt(terminals.length)])
+                        .gate(gates[random.nextInt(gates.length)])
                         .baggageAllowance(20 + random.nextInt(21)) // 20-40 kg
+                        .facilities(facilitiesList[random.nextInt(facilitiesList.length)])
+                        .status(flightStatuses[random.nextInt(flightStatuses.length)])
                         .build();
                 flightService.createFlight(flight);
                 flightIds.add(flightId);

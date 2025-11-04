@@ -54,4 +54,7 @@ public class CreateFlightDto {
     private Integer baggageAllowance;
 
     private String facilities;
+    
+    @Min(value = 1, message = "Status must be between 1 and 5")
+    private Integer status; // 1=Scheduled, 2=In Flight, 3=Finished, 4=Delayed, 5=Cancelled
 }
