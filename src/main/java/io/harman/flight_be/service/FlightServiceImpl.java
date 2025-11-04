@@ -73,8 +73,10 @@ public class FlightServiceImpl implements FlightService {
             throw new RuntimeException("Airplane is not available for the specified time period");
         }
 
-        // Generate flight ID
-        String flightId = generateFlightId(createFlightDto.getAirplaneId());
+        // Generate flight ID or use provided ID
+        String flightId = createFlightDto.getId() != null && !createFlightDto.getId().isBlank() 
+                ? createFlightDto.getId() 
+                : generateFlightId(createFlightDto.getAirplaneId());
 
         Flight flight = Flight.builder()
                 .id(flightId)
