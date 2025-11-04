@@ -18,23 +18,18 @@ import java.util.UUID;
 @Table(name = "booking_passengers")
 @IdClass(BookingPassenger.BookingPassengerId.class)
 public class BookingPassenger {
-    
+
     @Id
     @Column(name = "booking_id", nullable = false)
     private String bookingId;
-    
+
     @Id
     @Column(name = "passenger_id", nullable = false)
     private UUID passengerId;
-    
-    @Column(name = "created_at", nullable = false)
+
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
-    
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-    
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

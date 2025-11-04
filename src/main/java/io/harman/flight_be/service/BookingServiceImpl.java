@@ -1,18 +1,29 @@
 package io.harman.flight_be.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import io.harman.flight_be.dto.booking.CreateBookingDto;
 import io.harman.flight_be.dto.booking.ReadBookingDto;
 import io.harman.flight_be.dto.booking.UpdateBookingDto;
 import io.harman.flight_be.model.Booking;
 import io.harman.flight_be.model.Flight;
-import io.harman.flight_be.repository.*;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import io.harman.flight_be.model.Passenger;
+import io.harman.flight_be.model.Seat;
+import io.harman.flight_be.repository.BookingRepository;
+import io.harman.flight_be.repository.ClassFlightRepository;
+import io.harman.flight_be.repository.FlightRepository;
+import io.harman.flight_be.repository.PassengerRepository;
+import io.harman.flight_be.repository.SeatRepository;
 
 @Service
 @Transactional
@@ -22,15 +33,18 @@ public class BookingServiceImpl implements BookingService {
     private final FlightRepository flightRepository;
     private final ClassFlightRepository classFlightRepository;
     private final PassengerRepository passengerRepository;
+    private final SeatRepository seatRepository;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
-                             FlightRepository flightRepository,
-                             ClassFlightRepository classFlightRepository,
-                             PassengerRepository passengerRepository) {
+            FlightRepository flightRepository,
+            ClassFlightRepository classFlightRepository,
+            PassengerRepository passengerRepository,
+            SeatRepository seatRepository) {
         this.bookingRepository = bookingRepository;
         this.flightRepository = flightRepository;
         this.classFlightRepository = classFlightRepository;
         this.passengerRepository = passengerRepository;
+        this.seatRepository = seatRepository;
     }
 
     @Override
@@ -49,7 +63,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public ReadBookingDto getBookingById(String id) {
-        Booking booking = bookingRepository.findById(id)
+        Booking booking = bookingRepository.findByIdWithPassengers(id)
                 .orElseThrow(() -> new RuntimeException("Booking with ID " + id + " not found"));
         return mapToReadDto(booking);
     }
@@ -58,7 +72,8 @@ public class BookingServiceImpl implements BookingService {
     public ReadBookingDto createBooking(CreateBookingDto createBookingDto) {
         // Validate flight exists and is scheduled
         Flight flight = flightRepository.findByIdAndIsDeletedFalse(createBookingDto.getFlightId())
-                .orElseThrow(() -> new RuntimeException("Flight with ID " + createBookingDto.getFlightId() + " not found or inactive"));
+                .orElseThrow(() -> new RuntimeException(
+                        "Flight with ID " + createBookingDto.getFlightId() + " not found or inactive"));
 
         if (flight.getStatus() != 1) {
             throw new RuntimeException("Can only book flights with Scheduled status");
@@ -66,25 +81,28 @@ public class BookingServiceImpl implements BookingService {
 
         // Validate class flight exists
         classFlightRepository.findById(createBookingDto.getClassFlightId())
-                .orElseThrow(() -> new RuntimeException("Class Flight with ID " + createBookingDto.getClassFlightId() + " not found"));
+                .orElseThrow(() -> new RuntimeException(
+                        "Class Flight with ID " + createBookingDto.getClassFlightId() + " not found"));
 
         // Validate passenger count (max 10)
         if (createBookingDto.getPassengerCount() > 10) {
             throw new RuntimeException("Maximum 10 passengers allowed per booking");
         }
 
-        // Validate all passengers exist
+        // Validate all passengers exist and fetch them
+        List<Passenger> passengers = new ArrayList<>();
         if (createBookingDto.getPassengerIds() != null) {
             for (UUID passengerId : createBookingDto.getPassengerIds()) {
-                passengerRepository.findById(passengerId)
+                Passenger passenger = passengerRepository.findById(passengerId)
                         .orElseThrow(() -> new RuntimeException("Passenger with ID " + passengerId + " not found"));
+                passengers.add(passenger);
             }
         }
 
         // Generate booking ID
-        String bookingId = generateBookingId(createBookingDto.getFlightId(), 
-                                            flight.getOriginAirportCode(), 
-                                            flight.getDestinationAirportCode());
+        String bookingId = generateBookingId(createBookingDto.getFlightId(),
+                flight.getOriginAirportCode(),
+                flight.getDestinationAirportCode());
 
         Booking booking = Booking.builder()
                 .id(bookingId)
@@ -93,13 +111,40 @@ public class BookingServiceImpl implements BookingService {
                 .contactEmail(createBookingDto.getContactEmail())
                 .contactPhone(createBookingDto.getContactPhone())
                 .passengerCount(createBookingDto.getPassengerCount())
-                .status(1) // Unpaid
+                .status(createBookingDto.getStatus() != null ? createBookingDto.getStatus() : 1) // Use provided status
+                                                                                                 // or default to Unpaid
                 .totalPrice(createBookingDto.getTotalPrice())
+                .passengers(passengers)
                 .isDeleted(false)
                 .build();
 
         Booking savedBooking = bookingRepository.save(booking);
-        return mapToReadDto(savedBooking);
+
+        // Assign seats to passengers
+        if (!passengers.isEmpty()) {
+            // Get available seats for the class flight
+            List<Seat> availableSeats = seatRepository.findByClassFlightIdAndIsAvailableTrueOrderBySeatNumberAsc(
+                    createBookingDto.getClassFlightId());
+
+            // Assign seats to each passenger
+            int seatIndex = 0;
+            for (Passenger passenger : passengers) {
+                if (seatIndex < availableSeats.size()) {
+                    Seat seat = availableSeats.get(seatIndex);
+                    seatRepository.assignSeatToPassenger(seat.getId(), passenger.getId());
+                    seatIndex++;
+                } else {
+                    // Not enough available seats
+                    System.err.println("Warning: Not enough available seats for all passengers in booking "
+                            + savedBooking.getId());
+                    break;
+                }
+            }
+        }
+
+        // Fetch the saved booking with passengers to return complete data
+        return mapToReadDto(bookingRepository.findByIdWithPassengers(savedBooking.getId())
+                .orElse(savedBooking));
     }
 
     @Override
@@ -145,10 +190,10 @@ public class BookingServiceImpl implements BookingService {
         // Soft delete - mark as deleted and set status to Cancelled
         booking.setIsDeleted(true);
         booking.setStatus(3); // Cancelled
-        
+
         // Release all seats associated with this booking
         // This would need BookingPassenger logic to be fully implemented
-        
+
         bookingRepository.save(booking);
     }
 
@@ -183,7 +228,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Map<String, Object> getBookingStatistics(LocalDateTime start, LocalDateTime end) {
         List<Booking> bookings = bookingRepository.findByCreatedAtBetweenAndIsDeletedFalse(start, end);
-        
+
         // Filter only Paid and Unpaid bookings
         List<Booking> validBookings = bookings.stream()
                 .filter(b -> b.getStatus() == 1 || b.getStatus() == 2)
@@ -241,9 +286,9 @@ public class BookingServiceImpl implements BookingService {
     public String generateBookingId(String flightId, String originAirportCode, String destinationAirportCode) {
         // Format: FlightID-OriginAirportCode-DestinationAirportCode-Urutan
         String prefix = String.format("%s-%s-%s", flightId, originAirportCode, destinationAirportCode);
-        
+
         List<Booking> existingBookings = bookingRepository.findByFlightId(flightId);
-        
+
         int maxNumber = 0;
         for (Booking booking : existingBookings) {
             String id = booking.getId();
@@ -257,7 +302,7 @@ public class BookingServiceImpl implements BookingService {
                 }
             }
         }
-        
+
         return String.format("%s-%03d", prefix, maxNumber + 1);
     }
 
@@ -305,6 +350,29 @@ public class BookingServiceImpl implements BookingService {
 
         String statusLabel = getStatusLabel(booking.getStatus());
 
+        // Map passengers to PassengerSummary
+        List<ReadBookingDto.PassengerSummary> passengerSummaries = new ArrayList<>();
+        if (booking.getPassengers() != null && !booking.getPassengers().isEmpty()) {
+            for (Passenger passenger : booking.getPassengers()) {
+                // Find seat assigned to this passenger for this booking's class flight
+                String seatNumber = null;
+                if (booking.getClassFlightId() != null) {
+                    List<Seat> seats = seatRepository.findByClassFlightIdAndPassengerId(
+                            booking.getClassFlightId(), passenger.getId());
+                    if (!seats.isEmpty()) {
+                        seatNumber = seats.get(0).getSeatNumber();
+                    }
+                }
+
+                ReadBookingDto.PassengerSummary summary = ReadBookingDto.PassengerSummary.builder()
+                        .id(passenger.getId().toString())
+                        .fullName(passenger.getFullName())
+                        .seatNumber(seatNumber)
+                        .build();
+                passengerSummaries.add(summary);
+            }
+        }
+
         return ReadBookingDto.builder()
                 .id(booking.getId())
                 .flightId(booking.getFlightId())
@@ -321,6 +389,7 @@ public class BookingServiceImpl implements BookingService {
                 .status(booking.getStatus())
                 .statusLabel(statusLabel)
                 .totalPrice(booking.getTotalPrice())
+                .passengers(passengerSummaries)
                 .createdAt(booking.getCreatedAt())
                 .updatedAt(booking.getUpdatedAt())
                 .isDeleted(booking.getIsDeleted())
@@ -328,13 +397,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String getStatusLabel(Integer status) {
-        if (status == null) return "Unknown";
+        if (status == null)
+            return "Unknown";
         switch (status) {
-            case 1: return "Unpaid";
-            case 2: return "Paid";
-            case 3: return "Cancelled";
-            case 4: return "Rescheduled";
-            default: return "Unknown";
+            case 1:
+                return "Unpaid";
+            case 2:
+                return "Paid";
+            case 3:
+                return "Cancelled";
+            case 4:
+                return "Rescheduled";
+            default:
+                return "Unknown";
         }
     }
 }

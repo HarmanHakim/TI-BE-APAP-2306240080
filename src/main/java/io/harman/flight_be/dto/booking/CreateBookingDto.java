@@ -43,6 +43,10 @@ public class CreateBookingDto {
     @DecimalMin(value = "0.00", message = "Total price must be at least 0.00")
     private BigDecimal totalPrice;
 
+    @Min(value = 1, message = "Status must be between 1 and 4")
+    @Max(value = 4, message = "Status must be between 1 and 4")
+    private Integer status; // 1=Unpaid, 2=Paid, 3=Cancelled, 4=Rescheduled
+
     @NotNull(message = "Passenger IDs are required")
     @Size(min = 1, message = "At least one passenger is required")
     private List<UUID> passengerIds;

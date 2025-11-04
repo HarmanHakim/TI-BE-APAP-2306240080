@@ -1,20 +1,30 @@
 package io.harman.flight_be.controller;
 
-import io.harman.flight_be.dto.booking.*;
-import io.harman.flight_be.dto.rest.BaseResponseDTO;
-import io.harman.flight_be.service.BookingService;
-import jakarta.validation.Valid;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import io.harman.flight_be.dto.booking.CreateBookingDto;
+import io.harman.flight_be.dto.booking.ReadBookingDto;
+import io.harman.flight_be.dto.booking.UpdateBookingDto;
+import io.harman.flight_be.dto.rest.BaseResponseDTO;
+import io.harman.flight_be.service.BookingService;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -31,12 +41,12 @@ public class BookingRestController {
             @RequestParam(required = false) Boolean isActive,
             @RequestParam(required = false) Integer status,
             @RequestParam(required = false) String email) {
-        
+
         var baseResponseDTO = new BaseResponseDTO<List<ReadBookingDto>>();
 
         try {
             List<ReadBookingDto> bookings;
-            
+
             if (email != null) {
                 bookings = bookingService.getBookingsByEmail(email);
             } else if (status != null) {
@@ -208,7 +218,7 @@ public class BookingRestController {
     public ResponseEntity<BaseResponseDTO<Map<String, Object>>> getBookingStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        
+
         var baseResponseDTO = new BaseResponseDTO<Map<String, Object>>();
 
         try {

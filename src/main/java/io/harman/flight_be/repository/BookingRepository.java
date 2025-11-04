@@ -52,6 +52,10 @@ public interface BookingRepository extends JpaRepository<Booking, String> {
     // Find booking by ID (not deleted)
     Optional<Booking> findByIdAndIsDeletedFalse(String id);
     
+    // Find booking by ID with passengers eagerly loaded
+    @Query("SELECT b FROM Booking b LEFT JOIN FETCH b.passengers WHERE b.id = :id")
+    Optional<Booking> findByIdWithPassengers(@Param("id") String id);
+    
     // Count bookings by flight
     long countByFlightId(String flightId);
     

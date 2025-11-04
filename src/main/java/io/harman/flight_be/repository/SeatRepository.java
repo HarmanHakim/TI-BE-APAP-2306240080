@@ -28,6 +28,9 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
     // Find seats by passenger ID
     List<Seat> findByPassengerId(UUID passengerId);
     
+    // Find seats by class flight ID and passenger ID
+    List<Seat> findByClassFlightIdAndPassengerId(Integer classFlightId, UUID passengerId);
+    
     // Find seats by seat number (across all flights)
     List<Seat> findBySeatNumber(String seatNumber);
     

@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class DummyDataGenerator {
-    
+
     private final AirlineService airlineService;
     private final AirplaneService airplaneService;
     private final PassengerService passengerService;
@@ -44,12 +44,11 @@ public class DummyDataGenerator {
     private final ClassFlightService classFlightService;
     private final SeatService seatService;
     private final BookingService bookingService;
-    
+
     public void generate() {
         System.out.println("=".repeat(60));
         System.out.println("Generating dummy data for Flight Booking System...");
         System.out.println("=".repeat(60));
-        
 
         Faker faker = new Faker(Locale.of("id", "ID"));
         Random random = new Random();
@@ -98,19 +97,19 @@ public class DummyDataGenerator {
         String[] airports = { "CGK", "SUB", "DPS", "UPG", "KNO", "BPN", "SOC", "PLM", "PDG", "JOG",
                 "BDO", "PKU", "BTH", "TKG", "SRG", "MDC", "AMQ", "MLG", "SBY", "HLP" };
         String[] terminals = { "1A", "1B", "1C", "2", "2A", "2B", "2C", "2D", "2E", "2F", "3", "3A", "3B" };
-        String[] gates = { "A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3", "B4", "B5", 
-                          "C1", "C2", "C3", "C4", "C5", "D1", "D2", "D3", "D4", "D5" };
+        String[] gates = { "A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3", "B4", "B5",
+                "C1", "C2", "C3", "C4", "C5", "D1", "D2", "D3", "D4", "D5" };
         String[] facilitiesList = {
-            "WiFi, In-flight Entertainment, Meal",
-            "WiFi, Meal, Blanket",
-            "In-flight Entertainment, Snacks",
-            "WiFi, In-flight Entertainment",
-            "Meal, Blanket, Pillow",
-            "WiFi, Meal, In-flight Entertainment, Power Outlet",
-            "In-flight Entertainment, Meal, Blanket, Pillow",
-            "WiFi, Snacks",
-            "Meal, In-flight Entertainment",
-            "WiFi, Meal, Blanket, Pillow, Power Outlet"
+                "WiFi, In-flight Entertainment, Meal",
+                "WiFi, Meal, Blanket",
+                "In-flight Entertainment, Snacks",
+                "WiFi, In-flight Entertainment",
+                "Meal, Blanket, Pillow",
+                "WiFi, Meal, In-flight Entertainment, Power Outlet",
+                "In-flight Entertainment, Meal, Blanket, Pillow",
+                "WiFi, Snacks",
+                "Meal, In-flight Entertainment",
+                "WiFi, Meal, Blanket, Pillow, Power Outlet"
         };
         // Flight status: 1=Scheduled, 2=In Flight, 3=Finished, 4=Delayed, 5=Cancelled
         Integer[] flightStatuses = { 1, 1, 1, 1, 1, 2, 2, 4, 4, 4 }; // Mostly scheduled, some in-flight/delayed
@@ -118,7 +117,8 @@ public class DummyDataGenerator {
         for (int i = 0; i < 20; i++) {
             try {
                 String selectedAirplaneId = airplaneIds.get(random.nextInt(airplaneIds.size()));
-                // Extract airline ID from airplane ID (format: XXX-XXX where first 3 are airline code)
+                // Extract airline ID from airplane ID (format: XXX-XXX where first 3 are
+                // airline code)
                 String airlineId = selectedAirplaneId.substring(0, 3);
                 String origin = airports[random.nextInt(airports.length)];
                 String destination;
@@ -172,7 +172,8 @@ public class DummyDataGenerator {
                     Integer id = classFlightService.createClassFlight(classFlight).getId();
                     classFlightIds.add(id);
                 } catch (Exception e) {
-                    System.err.println("Warning: Failed to create class flight for " + flightId + " - " + classTypes[i] + ": " + e.getMessage());
+                    System.err.println("Warning: Failed to create class flight for " + flightId + " - " + classTypes[i]
+                            + ": " + e.getMessage());
                 }
             }
         }
@@ -220,6 +221,8 @@ public class DummyDataGenerator {
         // 7. Create Bookings (15)
         System.out.println("\n[7/7] Creating Bookings...");
         int bookingCount = 0;
+        // Booking status: 1=Unpaid, 2=Paid, 3=Cancelled, 4=Rescheduled
+        Integer[] bookingStatuses = { 1, 1, 1, 1, 1, 2, 2, 2, 4 }; // Mostly unpaid, some paid, few rescheduled
 
         for (int i = 0; i < 15; i++) {
             try {
@@ -283,6 +286,7 @@ public class DummyDataGenerator {
                         .contactPhone(faker.phoneNumber().phoneNumber())
                         .passengerCount(numPassengers)
                         .totalPrice(totalPrice)
+                        .status(bookingStatuses[random.nextInt(bookingStatuses.length)])
                         .passengerIds(bookingPassengerIds)
                         .build();
 
