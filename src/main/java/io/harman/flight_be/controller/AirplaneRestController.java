@@ -29,12 +29,12 @@ public class AirplaneRestController {
             @RequestParam(required = false) String model,
             @RequestParam(required = false) Integer manufactureYear,
             @RequestParam(required = false) Boolean isDeleted) {
-        
+
         var baseResponseDTO = new BaseResponseDTO<List<ReadAirplaneDto>>();
 
         try {
             List<ReadAirplaneDto> airplanes;
-            
+
             if (airlineId != null || model != null || manufactureYear != null || isDeleted != null) {
                 airplanes = airplaneService.searchAirplanes(airlineId, model, manufactureYear, isDeleted);
             } else {

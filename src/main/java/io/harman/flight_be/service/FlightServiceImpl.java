@@ -27,9 +27,9 @@ public class FlightServiceImpl implements FlightService {
     private final BookingRepository bookingRepository;
 
     public FlightServiceImpl(FlightRepository flightRepository,
-                            AirlineRepository airlineRepository,
-                            AirplaneRepository airplaneRepository,
-                            BookingRepository bookingRepository) {
+            AirlineRepository airlineRepository,
+            AirplaneRepository airplaneRepository,
+            BookingRepository bookingRepository) {
         this.flightRepository = flightRepository;
         this.airlineRepository = airlineRepository;
         this.airplaneRepository = airplaneRepository;
@@ -61,11 +61,13 @@ public class FlightServiceImpl implements FlightService {
     public ReadFlightDto createFlight(CreateFlightDto createFlightDto) {
         // Validate airline exists
         airlineRepository.findById(createFlightDto.getAirlineId())
-                .orElseThrow(() -> new RuntimeException("Airline with ID " + createFlightDto.getAirlineId() + " not found"));
+                .orElseThrow(
+                        () -> new RuntimeException("Airline with ID " + createFlightDto.getAirlineId() + " not found"));
 
         // Validate airplane exists and is active
         airplaneRepository.findByIdAndIsDeletedFalse(createFlightDto.getAirplaneId())
-                .orElseThrow(() -> new RuntimeException("Airplane with ID " + createFlightDto.getAirplaneId() + " not found or inactive"));
+                .orElseThrow(() -> new RuntimeException(
+                        "Airplane with ID " + createFlightDto.getAirplaneId() + " not found or inactive"));
 
         // Validate departure time < arrival time
         if (!createFlightDto.getDepartureTime().isBefore(createFlightDto.getArrivalTime())) {
@@ -73,14 +75,14 @@ public class FlightServiceImpl implements FlightService {
         }
 
         // Check if airplane is available (not overlapping with other flights)
-        if (!isAirplaneAvailable(createFlightDto.getAirplaneId(), createFlightDto.getDepartureTime(), 
-                                 createFlightDto.getArrivalTime(), null)) {
+        if (!isAirplaneAvailable(createFlightDto.getAirplaneId(), createFlightDto.getDepartureTime(),
+                createFlightDto.getArrivalTime(), null)) {
             throw new RuntimeException("Airplane is not available for the specified time period");
         }
 
         // Generate flight ID or use provided ID
-        String flightId = createFlightDto.getId() != null && !createFlightDto.getId().isBlank() 
-                ? createFlightDto.getId() 
+        String flightId = createFlightDto.getId() != null && !createFlightDto.getId().isBlank()
+                ? createFlightDto.getId()
                 : generateFlightId(createFlightDto.getAirplaneId());
 
         Flight flight = Flight.builder()
@@ -95,7 +97,8 @@ public class FlightServiceImpl implements FlightService {
                 .gate(createFlightDto.getGate())
                 .baggageAllowance(createFlightDto.getBaggageAllowance())
                 .facilities(createFlightDto.getFacilities())
-                .status(createFlightDto.getStatus() != null ? createFlightDto.getStatus() : 1) // Use provided status or default to Scheduled
+                .status(createFlightDto.getStatus() != null ? createFlightDto.getStatus() : 1) // Use provided status or
+                                                                                               // default to Scheduled
                 .isDeleted(false)
                 .build();
 
@@ -119,8 +122,8 @@ public class FlightServiceImpl implements FlightService {
         }
 
         // Check if airplane is available (excluding current flight)
-        if (!isAirplaneAvailable(updateFlightDto.getAirplaneId(), updateFlightDto.getDepartureTime(), 
-                                 updateFlightDto.getArrivalTime(), updateFlightDto.getId())) {
+        if (!isAirplaneAvailable(updateFlightDto.getAirplaneId(), updateFlightDto.getDepartureTime(),
+                updateFlightDto.getArrivalTime(), updateFlightDto.getId())) {
             throw new RuntimeException("Airplane is not available for the specified time period");
         }
 
@@ -147,7 +150,8 @@ public class FlightServiceImpl implements FlightService {
 
         // Check if flight can be deleted
         if (!canDeleteFlight(id)) {
-            throw new RuntimeException("Cannot delete flight. Only Scheduled or Delayed flights without active bookings can be cancelled");
+            throw new RuntimeException(
+                    "Cannot delete flight. Only Scheduled or Delayed flights without active bookings can be cancelled");
         }
 
         // Soft delete - mark as deleted and set status to Cancelled
@@ -157,14 +161,15 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public List<ReadFlightDto> searchFlights(String origin, String destination, LocalDateTime departureDate, 
-                                            String airlineId, Integer status) {
+    public List<ReadFlightDto> searchFlights(String origin, String destination, LocalDateTime departureDate,
+            String airlineId, Integer status) {
         List<Flight> flights = flightRepository.findByIsDeletedFalse();
 
         return flights.stream()
                 .filter(f -> origin == null || f.getOriginAirportCode().equalsIgnoreCase(origin))
                 .filter(f -> destination == null || f.getDestinationAirportCode().equalsIgnoreCase(destination))
-                .filter(f -> departureDate == null || f.getDepartureTime().toLocalDate().equals(departureDate.toLocalDate()))
+                .filter(f -> departureDate == null
+                        || f.getDepartureTime().toLocalDate().equals(departureDate.toLocalDate()))
                 .filter(f -> airlineId == null || f.getAirlineId().equals(airlineId))
                 .filter(f -> status == null || f.getStatus().equals(status))
                 .map(this::mapToReadDto)
@@ -173,7 +178,8 @@ public class FlightServiceImpl implements FlightService {
 
     @Override
     public List<ReadFlightDto> getFlightsByRoute(String origin, String destination) {
-        return flightRepository.findByOriginAirportCodeAndDestinationAirportCodeAndIsDeletedFalse(origin, destination).stream()
+        return flightRepository.findByOriginAirportCodeAndDestinationAirportCodeAndIsDeletedFalse(origin, destination)
+                .stream()
                 .map(this::mapToReadDto)
                 .collect(Collectors.toList());
     }
@@ -217,7 +223,7 @@ public class FlightServiceImpl implements FlightService {
     public String generateFlightId(String airplaneId) {
         // Format: {AirplaneID}-{NomorUrut3Digit}
         List<Flight> existingFlights = flightRepository.findByAirplaneId(airplaneId);
-        
+
         int maxNumber = 0;
         for (Flight flight : existingFlights) {
             String id = flight.getId();
@@ -231,7 +237,7 @@ public class FlightServiceImpl implements FlightService {
                 }
             }
         }
-        
+
         return String.format("%s-%03d", airplaneId, maxNumber + 1);
     }
 
@@ -248,7 +254,8 @@ public class FlightServiceImpl implements FlightService {
         }
 
         // Check if there are active bookings (Paid or Rescheduled)
-        List<io.harman.flight_be.model.Booking> activeBookings = bookingRepository.findByFlightIdAndIsDeletedFalse(flightId);
+        List<io.harman.flight_be.model.Booking> activeBookings = bookingRepository
+                .findByFlightIdAndIsDeletedFalse(flightId);
         return activeBookings.stream()
                 .noneMatch(booking -> booking.getStatus() == 2 || booking.getStatus() == 4);
     }
@@ -265,7 +272,8 @@ public class FlightServiceImpl implements FlightService {
     }
 
     @Override
-    public boolean isAirplaneAvailable(String airplaneId, LocalDateTime departureTime, LocalDateTime arrivalTime, String excludeFlightId) {
+    public boolean isAirplaneAvailable(String airplaneId, LocalDateTime departureTime, LocalDateTime arrivalTime,
+            String excludeFlightId) {
         List<Flight> existingFlights = flightRepository.findByAirplaneIdAndIsDeletedFalse(airplaneId);
 
         for (Flight flight : existingFlights) {
@@ -277,7 +285,8 @@ public class FlightServiceImpl implements FlightService {
             // Only check scheduled, in-flight, or delayed flights
             if (flight.getStatus() == 1 || flight.getStatus() == 2 || flight.getStatus() == 4) {
                 // Check if time ranges overlap
-                if (!(arrivalTime.isBefore(flight.getDepartureTime()) || departureTime.isAfter(flight.getArrivalTime()))) {
+                if (!(arrivalTime.isBefore(flight.getDepartureTime())
+                        || departureTime.isAfter(flight.getArrivalTime()))) {
                     return false; // Overlapping time found
                 }
             }
@@ -341,14 +350,21 @@ public class FlightServiceImpl implements FlightService {
     }
 
     private String getStatusLabel(Integer status) {
-        if (status == null) return "Unknown";
+        if (status == null)
+            return "Unknown";
         switch (status) {
-            case 1: return "Scheduled";
-            case 2: return "In Flight";
-            case 3: return "Finished";
-            case 4: return "Delayed";
-            case 5: return "Cancelled";
-            default: return "Unknown";
+            case 1:
+                return "Scheduled";
+            case 2:
+                return "In Flight";
+            case 3:
+                return "Finished";
+            case 4:
+                return "Delayed";
+            case 5:
+                return "Cancelled";
+            default:
+                return "Unknown";
         }
     }
 }

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +29,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "bookings")
 @SQLDelete(sql = "UPDATE bookings SET is_deleted = true, status = 3, updated_at = NOW() WHERE id=?")
-@Where(clause = "is_deleted = false")
 public class Booking {
 
     @Id
