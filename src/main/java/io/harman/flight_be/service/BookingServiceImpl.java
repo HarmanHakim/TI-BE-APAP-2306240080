@@ -246,6 +246,7 @@ public class BookingServiceImpl implements BookingService {
 
             BigDecimal totalRevenue = flightBookings.stream()
                     .map(Booking::getTotalPrice)
+                    .filter(price -> price != null)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             int bookingCount = flightBookings.size();
@@ -262,9 +263,21 @@ public class BookingServiceImpl implements BookingService {
             flightStats.add(stat);
         }
 
+        // Calculate overall totals
+        BigDecimal overallRevenue = validBookings.stream()
+                .map(Booking::getTotalPrice)
+                .filter(price -> price != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int overallPassengers = validBookings.stream()
+                .mapToInt(Booking::getPassengerCount)
+                .sum();
+
         Map<String, Object> result = new HashMap<>();
         result.put("period", Map.of("start", start, "end", end));
         result.put("totalBookings", validBookings.size());
+        result.put("totalPassengers", overallPassengers);
+        result.put("totalRevenue", overallRevenue);
         result.put("flightStatistics", flightStats);
 
         return result;

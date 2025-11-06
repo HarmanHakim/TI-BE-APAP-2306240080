@@ -179,24 +179,34 @@ public class DummyDataGenerator {
         }
         System.out.println("✓ Created " + classFlightIds.size() + " class flights");
 
-        // 5. Create Seats (at least 300 - 5 seats per class flight)
+        // 5. Create Seats (based on class flight seat capacity)
         System.out.println("\n[5/7] Creating Seats...");
         int seatCount = 0;
         Map<Integer, List<String>> classFlightSeatNumbers = new HashMap<>();
 
         for (Integer classFlightId : classFlightIds) {
-            List<String> seatNumbers = new ArrayList<>();
-            for (int i = 0; i < 5; i++) { // 5 seats per class
-                String seatNumber = String.format("%d%c", (i / 6) + 1, 'A' + (i % 6));
-                CreateSeatDto seat = CreateSeatDto.builder()
-                        .classFlightId(classFlightId)
-                        .seatNumber(seatNumber)
-                        .build();
-                seatService.createSeat(seat);
-                seatNumbers.add(seatNumber);
-                seatCount++;
+            try {
+                // Get the seat capacity for this class flight
+                var classFlight = classFlightService.getClassFlightById(classFlightId);
+                int seatCapacity = classFlight.getSeatCapacity();
+
+                List<String> seatNumbers = new ArrayList<>();
+                for (int i = 0; i < seatCapacity; i++) {
+                    // Generate seat number: row number (1-based) + seat letter (A-F)
+                    String seatNumber = String.format("%d%c", (i / 6) + 1, 'A' + (i % 6));
+                    CreateSeatDto seat = CreateSeatDto.builder()
+                            .classFlightId(classFlightId)
+                            .seatNumber(seatNumber)
+                            .build();
+                    seatService.createSeat(seat);
+                    seatNumbers.add(seatNumber);
+                    seatCount++;
+                }
+                classFlightSeatNumbers.put(classFlightId, seatNumbers);
+            } catch (Exception e) {
+                System.err.println(
+                        "Warning: Failed to create seats for class flight " + classFlightId + ": " + e.getMessage());
             }
-            classFlightSeatNumbers.put(classFlightId, seatNumbers);
         }
         System.out.println("✓ Created " + seatCount + " seats");
 
