@@ -14,8 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateAirplaneDto {
-    @NotBlank(message = "Airplane ID is required")
-    @Size(max = 255, message = "Airplane ID must not exceed 255 characters")
+    // ID is set from path variable, not from request body
     private String id;
 
     @NotBlank(message = "Airline ID is required")

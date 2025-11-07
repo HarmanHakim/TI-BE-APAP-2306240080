@@ -15,8 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateBookingDto {
-    @NotBlank(message = "Booking ID is required")
-    @Size(max = 255, message = "Booking ID must not exceed 255 characters")
+    // ID is set from path variable, not from request body
     private String id;
 
     @NotBlank(message = "Flight ID is required")

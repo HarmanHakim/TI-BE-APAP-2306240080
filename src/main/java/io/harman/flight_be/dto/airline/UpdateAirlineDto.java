@@ -12,8 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateAirlineDto {
-    @NotBlank(message = "Airline ID is required")
-    @Size(max = 3, min = 3, message = "Airline ID must be exactly 3 characters")
+    // ID is set from path variable, not from request body
     private String id;
 
     @NotBlank(message = "Airline name is required")

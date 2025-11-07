@@ -17,8 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateFlightDto {
-    @NotBlank(message = "Flight ID is required")
-    @Size(max = 255, message = "Flight ID must not exceed 255 characters")
+    // ID is set from path variable, not from request body
     private String id;
 
     @NotBlank(message = "Airline ID is required")

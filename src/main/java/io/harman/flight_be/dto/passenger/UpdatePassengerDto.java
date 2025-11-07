@@ -19,7 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdatePassengerDto {
-    @NotNull(message = "Passenger ID is required")
+    // ID is set from path variable, not from request body
     private UUID id;
 
     @NotBlank(message = "Full name is required")
