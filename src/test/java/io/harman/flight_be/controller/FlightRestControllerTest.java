@@ -51,7 +51,7 @@ class FlightRestControllerTest {
 
                 flightDto1 = ReadFlightDto.builder()
                                 .id("FL001")
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .airplaneId("AP001")
                                 .originAirportCode("CGK")
                                 .destinationAirportCode("DPS")
@@ -64,7 +64,7 @@ class FlightRestControllerTest {
 
                 flightDto2 = ReadFlightDto.builder()
                                 .id("FL002")
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .airplaneId("AP002")
                                 .originAirportCode("DPS")
                                 .destinationAirportCode("CGK")
@@ -76,7 +76,7 @@ class FlightRestControllerTest {
                                 .build();
 
                 createFlightDto = CreateFlightDto.builder()
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .airplaneId("AP001")
                                 .originAirportCode("CGK")
                                 .destinationAirportCode("DPS")
@@ -90,7 +90,7 @@ class FlightRestControllerTest {
                                 .build();
 
                 updateFlightDto = UpdateFlightDto.builder()
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .airplaneId("AP001")
                                 .originAirportCode("CGK")
                                 .destinationAirportCode("DPS")

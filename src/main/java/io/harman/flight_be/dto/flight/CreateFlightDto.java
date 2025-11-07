@@ -1,5 +1,7 @@
 package io.harman.flight_be.dto.flight;
 
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -10,15 +12,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateFlightDto {
-    @NotBlank(message = "Flight ID is required")
-    @Size(max = 255, message = "Flight ID must not exceed 255 characters")
     private String id;
 
     @NotBlank(message = "Airline ID is required")
@@ -54,7 +52,7 @@ public class CreateFlightDto {
     private Integer baggageAllowance;
 
     private String facilities;
-    
+
     @Min(value = 1, message = "Status must be between 1 and 5")
     private Integer status; // 1=Scheduled, 2=In Flight, 3=Finished, 4=Delayed, 5=Cancelled
 }

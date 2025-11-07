@@ -1,10 +1,25 @@
 package io.harman.flight_be.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harman.flight_be.dto.passenger.CreatePassengerDto;
-import io.harman.flight_be.dto.passenger.ReadPassengerDto;
-import io.harman.flight_be.dto.passenger.UpdatePassengerDto;
-import io.harman.flight_be.service.PassengerService;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,17 +30,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.harman.flight_be.dto.passenger.CreatePassengerDto;
+import io.harman.flight_be.dto.passenger.ReadPassengerDto;
+import io.harman.flight_be.dto.passenger.UpdatePassengerDto;
+import io.harman.flight_be.service.PassengerService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -216,7 +226,7 @@ class PassengerRestControllerTest {
                 UpdatePassengerDto dto = UpdatePassengerDto.builder()
                                 .id(fakeId)
                                 .fullName("Test")
-                                .birthDate(LocalDate.now())
+                                .birthDate(LocalDate.of(1990, 1, 1))
                                 .gender(1)
                                 .idPassport("TEST")
                                 .build();
@@ -248,8 +258,8 @@ class PassengerRestControllerTest {
                                 .when(passengerService).deletePassenger(fakeId);
 
                 mockMvc.perform(delete("/api/passengers/" + fakeId + "/delete"))
-                                .andExpect(status().isBadRequest())
-                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
                                 .andExpect(jsonPath("$.message").value(containsString("not found")));
         }
 

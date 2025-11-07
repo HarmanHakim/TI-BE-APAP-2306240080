@@ -1,22 +1,26 @@
 package io.harman.flight_be.dto.booking;
 
-import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateBookingDto {
-    @NotBlank(message = "Booking ID is required")
-    @Size(max = 255, message = "Booking ID must not exceed 255 characters")
     private String id;
 
     @NotBlank(message = "Flight ID is required")

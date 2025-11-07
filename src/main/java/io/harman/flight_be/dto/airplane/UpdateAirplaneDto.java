@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateAirplaneDto {
-    // ID is set from path variable, not from request body
     private String id;
 
     @NotBlank(message = "Airline ID is required")

@@ -1,10 +1,21 @@
 package io.harman.flight_be.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.harman.flight_be.dto.airplane.CreateAirplaneDto;
-import io.harman.flight_be.dto.airplane.ReadAirplaneDto;
-import io.harman.flight_be.dto.airplane.UpdateAirplaneDto;
-import io.harman.flight_be.service.AirplaneService;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,15 +26,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import io.harman.flight_be.dto.airplane.CreateAirplaneDto;
+import io.harman.flight_be.dto.airplane.ReadAirplaneDto;
+import io.harman.flight_be.dto.airplane.UpdateAirplaneDto;
+import io.harman.flight_be.service.AirplaneService;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -48,7 +56,7 @@ class AirplaneRestControllerTest {
         void setUp() {
                 airplaneDto1 = ReadAirplaneDto.builder()
                                 .id("AP001")
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .model("Boeing 737")
                                 .seatCapacity(180)
                                 .manufactureYear(2020)
@@ -57,7 +65,7 @@ class AirplaneRestControllerTest {
 
                 airplaneDto2 = ReadAirplaneDto.builder()
                                 .id("AP002")
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .model("Airbus A320")
                                 .seatCapacity(160)
                                 .manufactureYear(2021)
@@ -65,14 +73,14 @@ class AirplaneRestControllerTest {
                                 .build();
 
                 createAirplaneDto = CreateAirplaneDto.builder()
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .model("Boeing 777")
                                 .seatCapacity(300)
                                 .manufactureYear(2022)
                                 .build();
 
                 updateAirplaneDto = UpdateAirplaneDto.builder()
-                                .airlineId("GA")
+                                .airlineId("GAI")
                                 .model("Boeing 737 MAX")
                                 .seatCapacity(190)
                                 .manufactureYear(2020)
