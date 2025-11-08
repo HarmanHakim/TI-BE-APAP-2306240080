@@ -1,13 +1,21 @@
 package io.harman.flight_be.service;
 
-import io.harman.flight_be.dto.airplane.CreateAirplaneDto;
-import io.harman.flight_be.dto.airplane.ReadAirplaneDto;
-import io.harman.flight_be.dto.airplane.UpdateAirplaneDto;
-import io.harman.flight_be.model.Airline;
-import io.harman.flight_be.model.Airplane;
-import io.harman.flight_be.repository.AirlineRepository;
-import io.harman.flight_be.repository.AirplaneRepository;
-import io.harman.flight_be.repository.FlightRepository;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,14 +24,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import io.harman.flight_be.dto.airplane.CreateAirplaneDto;
+import io.harman.flight_be.dto.airplane.ReadAirplaneDto;
+import io.harman.flight_be.dto.airplane.UpdateAirplaneDto;
+import io.harman.flight_be.model.Airline;
+import io.harman.flight_be.model.Airplane;
+import io.harman.flight_be.model.Flight;
+import io.harman.flight_be.repository.AirlineRepository;
+import io.harman.flight_be.repository.AirplaneRepository;
+import io.harman.flight_be.repository.FlightRepository;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
@@ -220,5 +229,114 @@ class AirplaneServiceImplTest {
         assertTrue(exception.getMessage().contains("not found"));
         verify(airplaneRepository).findById("XX");
         verify(airplaneRepository, never()).save(any(Airplane.class));
+    }
+
+    @Test
+    void testDeleteAirplaneCancelsRelatedFlights() {
+        when(airplaneRepository.findById("AP001")).thenReturn(Optional.of(airplane1));
+        when(airplaneRepository.save(any(Airplane.class))).thenReturn(airplane1);
+
+        Flight related = Flight.builder()
+                .id("FL100")
+                .status(3) // Finished so can delete
+                .isDeleted(false)
+                .build();
+
+        when(flightRepository.findByAirplaneIdAndIsDeletedFalse("AP001")).thenReturn(Arrays.asList(related));
+        when(flightRepository.save(any(Flight.class))).thenReturn(related);
+
+        assertDoesNotThrow(() -> airplaneService.deleteAirplane("AP001"));
+
+        // airplane should be marked deleted and saved
+        verify(airplaneRepository).save(any(Airplane.class));
+        // related flight should be cancelled and saved
+        verify(flightRepository).save(any(Flight.class));
+    }
+
+    @Test
+    void testDeleteAirplaneCannotDeleteWhenActiveFlightsExist() {
+        when(airplaneRepository.findById("AP001")).thenReturn(Optional.of(airplane1));
+
+        Flight active = Flight.builder()
+                .id("FL101")
+                .status(1) // Scheduled -> prevents deletion
+                .isDeleted(false)
+                .build();
+
+        when(flightRepository.findByAirplaneIdAndIsDeletedFalse("AP001")).thenReturn(Arrays.asList(active));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> airplaneService.deleteAirplane("AP001"));
+        assertTrue(ex.getMessage().contains("Cannot delete airplane"));
+
+        verify(airplaneRepository, never()).save(any(Airplane.class));
+    }
+
+    @Test
+    void testActivateAirplane() {
+        airplane1.setIsDeleted(true);
+        when(airplaneRepository.findById("AP001")).thenReturn(Optional.of(airplane1));
+        when(airplaneRepository.save(any(Airplane.class))).thenReturn(airplane1);
+
+        airplaneService.activateAirplane("AP001");
+
+        assertFalse(airplane1.getIsDeleted());
+        verify(airplaneRepository).save(any(Airplane.class));
+    }
+
+    @Test
+    void testGetAirplanesByAirlineId() {
+        List<Airplane> list = Arrays.asList(airplane1, airplane2);
+        when(airplaneRepository.findByAirlineIdAndIsDeletedFalse("GA")).thenReturn(list);
+
+        List<ReadAirplaneDto> result = airplaneService.getAirplanesByAirlineId("GA");
+
+        assertEquals(2, result.size());
+        verify(airplaneRepository).findByAirlineIdAndIsDeletedFalse("GA");
+    }
+
+    @Test
+    void testSearchAirplanesFilters() {
+        Airplane airplane3 = Airplane.builder()
+                .id("AP003")
+                .airlineId("XX")
+                .model("Embraer")
+                .seatCapacity(50)
+                .manufactureYear(2019)
+                .isDeleted(false)
+                .build();
+
+        List<Airplane> all = Arrays.asList(airplane1, airplane2, airplane3);
+        when(airplaneRepository.findAll()).thenReturn(all);
+
+        // filter by model (case-insensitive) - ensure AP001 appears in results
+        List<ReadAirplaneDto> r1 = airplaneService.searchAirplanes(null, "boeing", null, null);
+        assertTrue(r1.stream().anyMatch(dto -> "AP001".equals(dto.getId())));
+
+        // filter by airlineId
+        List<ReadAirplaneDto> r2 = airplaneService.searchAirplanes("GA", null, null, null);
+        assertEquals(2, r2.size());
+
+        // filter by manufactureYear - ensure AP002 appears in results
+        List<ReadAirplaneDto> r3 = airplaneService.searchAirplanes(null, null, 2021, null);
+        assertTrue(r3.stream().anyMatch(dto -> "AP002".equals(dto.getId())));
+
+        // filter by isDeleted
+        airplane2.setIsDeleted(true);
+        List<ReadAirplaneDto> r4 = airplaneService.searchAirplanes(null, null, null, false);
+        // airplane2 is deleted so it should not appear; ensure AP001 present and AP002
+        // absent
+        assertTrue(r4.stream().anyMatch(dto -> "AP001".equals(dto.getId())));
+        assertTrue(r4.stream().noneMatch(dto -> "AP002".equals(dto.getId())));
+    }
+
+    @Test
+    void testGetAirplanesByManufactureYearRange() {
+        List<Airplane> list = Arrays.asList(airplane1, airplane2);
+        when(airplaneRepository.findByManufactureYearBetween(2019, 2021)).thenReturn(list);
+
+        List<ReadAirplaneDto> result = airplaneService.getAirplanesByManufactureYearRange(2019, 2021);
+
+        assertEquals(2, result.size());
+        verify(airplaneRepository).findByManufactureYearBetween(2019, 2021);
     }
 }

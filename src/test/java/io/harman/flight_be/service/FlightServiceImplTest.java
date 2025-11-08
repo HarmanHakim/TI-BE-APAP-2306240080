@@ -381,4 +381,163 @@ class FlightServiceImplTest {
 
         verify(flightRepository).findFlightsWithAvailableSeats();
     }
+
+    @Test
+    void testIsAirplaneAvailableNoExistingFlights() {
+        when(flightRepository.findByAirplaneIdAndIsDeletedFalse("AP001")).thenReturn(Arrays.asList());
+
+        boolean available = flightService.isAirplaneAvailable("AP001",
+                LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusHours(2), null);
+
+        assertTrue(available);
+        verify(flightRepository).findByAirplaneIdAndIsDeletedFalse("AP001");
+    }
+
+    @Test
+    void testIsAirplaneAvailableOverlappingReturnsFalse() {
+        LocalDateTime existingDep = LocalDateTime.now().plusDays(1);
+        LocalDateTime existingArr = existingDep.plusHours(2);
+
+        Flight existing = Flight.builder().id("FL100").airplaneId("AP001").departureTime(existingDep)
+                .arrivalTime(existingArr).status(1).isDeleted(false).build();
+
+        when(flightRepository.findByAirplaneIdAndIsDeletedFalse("AP001")).thenReturn(Arrays.asList(existing));
+
+        // new flight overlaps existing
+        LocalDateTime newDep = existingDep.plusMinutes(30);
+        LocalDateTime newArr = existingDep.plusHours(1);
+
+        boolean available = flightService.isAirplaneAvailable("AP001", newDep, newArr, null);
+
+        assertEquals(false, available);
+    }
+
+    @Test
+    void testIsAirplaneAvailableNonOverlappingReturnsTrue() {
+        LocalDateTime existingDep = LocalDateTime.now().plusDays(1);
+        LocalDateTime existingArr = existingDep.plusHours(2);
+
+        Flight existing = Flight.builder().id("FL101").airplaneId("AP001").departureTime(existingDep)
+                .arrivalTime(existingArr).status(1).isDeleted(false).build();
+
+        when(flightRepository.findByAirplaneIdAndIsDeletedFalse("AP001")).thenReturn(Arrays.asList(existing));
+
+        // new flight starts after existing arrival
+        LocalDateTime newDep = existingArr.plusHours(1);
+        LocalDateTime newArr = newDep.plusHours(2);
+
+        boolean available = flightService.isAirplaneAvailable("AP001", newDep, newArr, null);
+
+        assertTrue(available);
+    }
+
+    @Test
+    void testIsAirplaneAvailableSkipsExcludeFlightId() {
+        LocalDateTime existingDep = LocalDateTime.now().plusDays(1);
+        LocalDateTime existingArr = existingDep.plusHours(2);
+
+        Flight existing = Flight.builder().id("FL200").airplaneId("AP001").departureTime(existingDep)
+                .arrivalTime(existingArr).status(1).isDeleted(false).build();
+
+        when(flightRepository.findByAirplaneIdAndIsDeletedFalse("AP001")).thenReturn(Arrays.asList(existing));
+
+        // overlapping but exclude the same flight id
+        LocalDateTime newDep = existingDep.plusMinutes(15);
+        LocalDateTime newArr = existingDep.plusHours(1);
+
+        boolean available = flightService.isAirplaneAvailable("AP001", newDep, newArr, "FL200");
+
+        // should be true because the only conflicting flight is excluded
+        assertTrue(available);
+    }
+
+    @Test
+    void testIsAirplaneAvailableIgnoresNonCheckedStatuses() {
+        LocalDateTime existingDep = LocalDateTime.now().plusDays(1);
+        LocalDateTime existingArr = existingDep.plusHours(2);
+
+        // status 3 (Finished) should be ignored
+        Flight existing = Flight.builder().id("FL300").airplaneId("AP001").departureTime(existingDep)
+                .arrivalTime(existingArr).status(3).isDeleted(false).build();
+
+        when(flightRepository.findByAirplaneIdAndIsDeletedFalse("AP001")).thenReturn(Arrays.asList(existing));
+
+        LocalDateTime newDep = existingDep.plusMinutes(15);
+        LocalDateTime newArr = existingDep.plusHours(1);
+
+        boolean available = flightService.isAirplaneAvailable("AP001", newDep, newArr, null);
+
+        // should be true because existing flight status is not 1,2,4
+        assertTrue(available);
+    }
+
+    @Test
+    void testStatusLabelScheduled() {
+        Flight f = Flight.builder().id("S1").status(1).isDeleted(false).build();
+        when(flightRepository.findAll()).thenReturn(Arrays.asList(f));
+
+        List<ReadFlightDto> dtos = flightService.getAllFlights();
+        assertEquals(1, dtos.size());
+        assertEquals("Scheduled", dtos.get(0).getStatusLabel());
+    }
+
+    @Test
+    void testStatusLabelInFlight() {
+        Flight f = Flight.builder().id("S2").status(2).isDeleted(false).build();
+        when(flightRepository.findAll()).thenReturn(Arrays.asList(f));
+
+        List<ReadFlightDto> dtos = flightService.getAllFlights();
+        assertEquals(1, dtos.size());
+        assertEquals("In Flight", dtos.get(0).getStatusLabel());
+    }
+
+    @Test
+    void testStatusLabelFinished() {
+        Flight f = Flight.builder().id("S3").status(3).isDeleted(false).build();
+        when(flightRepository.findAll()).thenReturn(Arrays.asList(f));
+
+        List<ReadFlightDto> dtos = flightService.getAllFlights();
+        assertEquals(1, dtos.size());
+        assertEquals("Finished", dtos.get(0).getStatusLabel());
+    }
+
+    @Test
+    void testStatusLabelDelayed() {
+        Flight f = Flight.builder().id("S4").status(4).isDeleted(false).build();
+        when(flightRepository.findAll()).thenReturn(Arrays.asList(f));
+
+        List<ReadFlightDto> dtos = flightService.getAllFlights();
+        assertEquals(1, dtos.size());
+        assertEquals("Delayed", dtos.get(0).getStatusLabel());
+    }
+
+    @Test
+    void testStatusLabelCancelled() {
+        Flight f = Flight.builder().id("S5").status(5).isDeleted(false).build();
+        when(flightRepository.findAll()).thenReturn(Arrays.asList(f));
+
+        List<ReadFlightDto> dtos = flightService.getAllFlights();
+        assertEquals(1, dtos.size());
+        assertEquals("Cancelled", dtos.get(0).getStatusLabel());
+    }
+
+    @Test
+    void testStatusLabelUnknownNull() {
+        Flight f = Flight.builder().id("S6").status(null).isDeleted(false).build();
+        when(flightRepository.findAll()).thenReturn(Arrays.asList(f));
+
+        List<ReadFlightDto> dtos = flightService.getAllFlights();
+        assertEquals(1, dtos.size());
+        assertEquals("Unknown", dtos.get(0).getStatusLabel());
+    }
+
+    @Test
+    void testStatusLabelUnknownDefault() {
+        Flight f = Flight.builder().id("S7").status(999).isDeleted(false).build();
+        when(flightRepository.findAll()).thenReturn(Arrays.asList(f));
+
+        List<ReadFlightDto> dtos = flightService.getAllFlights();
+        assertEquals(1, dtos.size());
+        assertEquals("Unknown", dtos.get(0).getStatusLabel());
+    }
 }

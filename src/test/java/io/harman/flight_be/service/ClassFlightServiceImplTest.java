@@ -243,4 +243,78 @@ class ClassFlightServiceImplTest {
         assertEquals(2, result.size());
         verify(classFlightRepository).findAllWithAvailableSeats();
     }
+
+    @Test
+    void testGetClassFlightByFlightIdAndTypeSuccess() {
+        when(classFlightRepository.findByFlightIdAndClassType("FL001", "Economy"))
+                .thenReturn(Optional.of(classFlight1));
+
+        ReadClassFlightDto result = classFlightService.getClassFlightByFlightIdAndType("FL001", "Economy");
+
+        assertNotNull(result);
+        assertEquals("Economy", result.getClassType());
+        verify(classFlightRepository).findByFlightIdAndClassType("FL001", "Economy");
+    }
+
+    @Test
+    void testGetClassFlightByFlightIdAndTypeNotFound() {
+        when(classFlightRepository.findByFlightIdAndClassType("FL001", "Premium")).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> classFlightService.getClassFlightByFlightIdAndType("FL001", "Premium"));
+
+        assertTrue(ex.getMessage().contains("Class Flight not found") || ex.getMessage().contains("not found"));
+    }
+
+    @Test
+    void testDecreaseAvailableSeatsSuccess() {
+        when(classFlightRepository.decreaseAvailableSeats(1, 2)).thenReturn(1);
+
+        assertDoesNotThrow(() -> classFlightService.decreaseAvailableSeats(1, 2));
+        verify(classFlightRepository).decreaseAvailableSeats(1, 2);
+    }
+
+    @Test
+    void testDecreaseAvailableSeatsFail() {
+        when(classFlightRepository.decreaseAvailableSeats(1, 5)).thenReturn(0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> classFlightService.decreaseAvailableSeats(1, 5));
+
+        assertTrue(ex.getMessage().contains("Cannot decrease seats"));
+    }
+
+    @Test
+    void testIncreaseAvailableSeatsSuccess() {
+        when(classFlightRepository.increaseAvailableSeats(1, 3)).thenReturn(1);
+
+        assertDoesNotThrow(() -> classFlightService.increaseAvailableSeats(1, 3));
+        verify(classFlightRepository).increaseAvailableSeats(1, 3);
+    }
+
+    @Test
+    void testIncreaseAvailableSeatsFail() {
+        when(classFlightRepository.increaseAvailableSeats(999, 1)).thenReturn(0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> classFlightService.increaseAvailableSeats(999, 1));
+
+        assertTrue(ex.getMessage().contains("Cannot increase seats"));
+    }
+
+    @Test
+    void testGetTotalAvailableSeatsByFlightReturnsValue() {
+        when(classFlightRepository.getTotalAvailableSeatsByFlight("FL001")).thenReturn(140);
+
+        Integer total = classFlightService.getTotalAvailableSeatsByFlight("FL001");
+        assertEquals(140, total);
+    }
+
+    @Test
+    void testGetTotalAvailableSeatsByFlightNullReturnsZero() {
+        when(classFlightRepository.getTotalAvailableSeatsByFlight("FL001")).thenReturn(null);
+
+        Integer total = classFlightService.getTotalAvailableSeatsByFlight("FL001");
+        assertEquals(0, total);
+    }
 }

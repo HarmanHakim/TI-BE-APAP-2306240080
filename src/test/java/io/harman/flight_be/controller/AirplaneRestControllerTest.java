@@ -3,6 +3,7 @@ package io.harman.flight_be.controller;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -160,5 +161,27 @@ class AirplaneRestControllerTest {
                                 .andExpect(jsonPath("$.status").value(200));
 
                 verify(airplaneService).deleteAirplane("AP001");
+        }
+
+        @Test
+        void testActivateAirplaneSuccess() throws Exception {
+                doNothing().when(airplaneService).activateAirplane("AP001");
+
+                mockMvc.perform(post("/api/airplanes/AP001/activate"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200));
+
+                verify(airplaneService).activateAirplane("AP001");
+        }
+
+        @Test
+        void testActivateAirplaneBadRequest() throws Exception {
+                doThrow(new RuntimeException("Already active")).when(airplaneService).activateAirplane("AP002");
+
+                mockMvc.perform(post("/api/airplanes/AP002/activate"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400));
+
+                verify(airplaneService).activateAirplane("AP002");
         }
 }
