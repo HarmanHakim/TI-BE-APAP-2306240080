@@ -69,3 +69,25 @@ jacocoTestReport {
 		html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
 	}
 }
+
+// Define a list of exclusion patterns
+def jacocoExclude = [
+    '**/config/**', 
+    '**/*Application.class', 
+    '**/*Configuration.class', 
+    '**/model/**', 
+    '**/dto/**', 
+]
+
+jacocoTestReport {
+    // This makes sure tests run before generating the report
+    dependsOn test
+    
+    // Use afterEvaluate to ensure all class directories are set up before filtering
+    afterEvaluate {
+        // Filter the classes included in the JaCoCo report
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExclude)
+        }))
+    }
+}

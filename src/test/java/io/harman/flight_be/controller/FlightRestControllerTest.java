@@ -249,4 +249,77 @@ class FlightRestControllerTest {
                                 .andExpect(jsonPath("$.status").value(500))
                                 .andExpect(jsonPath("$.message").value(containsString("Failed to retrieve flights")));
         }
+
+        @Test
+        void testGetUpcomingFlightsSuccess() throws Exception {
+                List<ReadFlightDto> flights = Arrays.asList(flightDto1, flightDto2);
+                when(flightService.getUpcomingFlights()).thenReturn(flights);
+
+                mockMvc.perform(get("/api/flights/upcoming"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.message").value("Upcoming flights retrieved successfully"))
+                                .andExpect(jsonPath("$.data", hasSize(2)));
+
+                verify(flightService).getUpcomingFlights();
+        }
+
+        @Test
+        void testGetUpcomingFlightsError() throws Exception {
+                when(flightService.getUpcomingFlights()).thenThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/flights/upcoming"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message",
+                                                containsString("Failed to retrieve upcoming flights")));
+        }
+
+        @Test
+        void testGetFlightsDepartingTodaySuccess() throws Exception {
+                List<ReadFlightDto> flights = Arrays.asList(flightDto1);
+                when(flightService.getFlightsDepartingToday()).thenReturn(flights);
+
+                mockMvc.perform(get("/api/flights/today"))
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.message").value("Today's flights retrieved successfully"))
+                                .andExpect(jsonPath("$.data", hasSize(1)));
+
+                verify(flightService).getFlightsDepartingToday();
+        }
+
+        @Test
+        void testGetFlightsDepartingTodayError() throws Exception {
+                when(flightService.getFlightsDepartingToday()).thenThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/flights/today"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve today's flights")));
+        }
+
+        @Test
+        void testGetFlightsWithAvailableSeatsSuccess() throws Exception {
+                List<ReadFlightDto> flights = Arrays.asList(flightDto1);
+                when(flightService.getFlightsWithAvailableSeats()).thenReturn(flights);
+
+                mockMvc.perform(get("/api/flights/available"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.message")
+                                                .value("Flights with available seats retrieved successfully"))
+                                .andExpect(jsonPath("$.data", hasSize(1)));
+
+                verify(flightService).getFlightsWithAvailableSeats();
+        }
+
+        @Test
+        void testGetFlightsWithAvailableSeatsError() throws Exception {
+                when(flightService.getFlightsWithAvailableSeats()).thenThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/flights/available"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve flights")));
+        }
 }

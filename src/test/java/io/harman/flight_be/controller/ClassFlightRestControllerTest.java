@@ -1,8 +1,10 @@
 package io.harman.flight_be.controller;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -38,129 +40,168 @@ import io.harman.flight_be.service.ClassFlightService;
 @ActiveProfiles("test")
 class ClassFlightRestControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @MockBean
-    private ClassFlightService classFlightService;
+        @MockBean
+        private ClassFlightService classFlightService;
 
-    private ReadClassFlightDto classFlightDto1;
-    private ReadClassFlightDto classFlightDto2;
-    private CreateClassFlightDto createClassFlightDto;
-    private UpdateClassFlightDto updateClassFlightDto;
+        private ReadClassFlightDto classFlightDto1;
+        private ReadClassFlightDto classFlightDto2;
+        private CreateClassFlightDto createClassFlightDto;
+        private UpdateClassFlightDto updateClassFlightDto;
 
-    @BeforeEach
-    void setUp() {
-        classFlightDto1 = ReadClassFlightDto.builder()
-                .id(1)
-                .flightId("FL001")
-                .classType("Economy")
-                .seatCapacity(100)
-                .availableSeats(100)
-                .price(new BigDecimal("1000000"))
-                .build();
+        @BeforeEach
+        void setUp() {
+                classFlightDto1 = ReadClassFlightDto.builder()
+                                .id(1)
+                                .flightId("FL001")
+                                .classType("Economy")
+                                .seatCapacity(100)
+                                .availableSeats(100)
+                                .price(new BigDecimal("1000000"))
+                                .build();
 
-        classFlightDto2 = ReadClassFlightDto.builder()
-                .id(2)
-                .flightId("FL001")
-                .classType("Business")
-                .seatCapacity(40)
-                .availableSeats(40)
-                .price(new BigDecimal("3000000"))
-                .build();
+                classFlightDto2 = ReadClassFlightDto.builder()
+                                .id(2)
+                                .flightId("FL001")
+                                .classType("Business")
+                                .seatCapacity(40)
+                                .availableSeats(40)
+                                .price(new BigDecimal("3000000"))
+                                .build();
 
-        createClassFlightDto = CreateClassFlightDto.builder()
-                .flightId("FL001")
-                .classType("Economy")
-                .seatCapacity(100)
-                .price(new BigDecimal("1000000"))
-                .build();
+                createClassFlightDto = CreateClassFlightDto.builder()
+                                .flightId("FL001")
+                                .classType("Economy")
+                                .seatCapacity(100)
+                                .price(new BigDecimal("1000000"))
+                                .build();
 
-        updateClassFlightDto = UpdateClassFlightDto.builder()
-                .id(1)
-                .flightId("FL001")
-                .classType("Economy")
-                .seatCapacity(110)
-                .availableSeats(110)
-                .price(new BigDecimal("1100000"))
-                .build();
-    }
+                updateClassFlightDto = UpdateClassFlightDto.builder()
+                                .id(1)
+                                .flightId("FL001")
+                                .classType("Economy")
+                                .seatCapacity(110)
+                                .availableSeats(110)
+                                .price(new BigDecimal("1100000"))
+                                .build();
+        }
 
-    @Test
-    void testGetAllClassFlights() throws Exception {
-        List<ReadClassFlightDto> classFlights = Arrays.asList(classFlightDto1, classFlightDto2);
-        when(classFlightService.getAllClassFlights()).thenReturn(classFlights);
+        @Test
+        void testGetAllClassFlights() throws Exception {
+                List<ReadClassFlightDto> classFlights = Arrays.asList(classFlightDto1, classFlightDto2);
+                when(classFlightService.getAllClassFlights()).thenReturn(classFlights);
 
-        mockMvc.perform(get("/api/class-flights/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.data", hasSize(2)));
+                mockMvc.perform(get("/api/class-flights/all"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.data", hasSize(2)));
 
-        verify(classFlightService).getAllClassFlights();
-    }
+                verify(classFlightService).getAllClassFlights();
+        }
 
-    @Test
-    void testGetClassFlightByIdSuccess() throws Exception {
-        when(classFlightService.getClassFlightById(1)).thenReturn(classFlightDto1);
+        @Test
+        void testGetClassFlightByIdSuccess() throws Exception {
+                when(classFlightService.getClassFlightById(1)).thenReturn(classFlightDto1);
 
-        mockMvc.perform(get("/api/class-flights/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.data.id").value(1));
+                mockMvc.perform(get("/api/class-flights/1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.data.id").value(1));
 
-        verify(classFlightService).getClassFlightById(1);
-    }
+                verify(classFlightService).getClassFlightById(1);
+        }
 
-    @Test
-    void testGetClassFlightByIdNotFound() throws Exception {
-        when(classFlightService.getClassFlightById(999)).thenThrow(new RuntimeException("Class Flight not found"));
+        @Test
+        void testGetClassFlightByIdNotFound() throws Exception {
+                when(classFlightService.getClassFlightById(999))
+                                .thenThrow(new RuntimeException("Class Flight not found"));
 
-        mockMvc.perform(get("/api/class-flights/999"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404));
+                mockMvc.perform(get("/api/class-flights/999"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404));
 
-        verify(classFlightService).getClassFlightById(999);
-    }
+                verify(classFlightService).getClassFlightById(999);
+        }
 
-    @Test
-    void testCreateClassFlightSuccess() throws Exception {
-        when(classFlightService.createClassFlight(any(CreateClassFlightDto.class))).thenReturn(classFlightDto1);
+        @Test
+        void testCreateClassFlightSuccess() throws Exception {
+                when(classFlightService.createClassFlight(any(CreateClassFlightDto.class))).thenReturn(classFlightDto1);
 
-        mockMvc.perform(post("/api/class-flights/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(createClassFlightDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value(201))
-                .andExpect(jsonPath("$.data").exists());
+                mockMvc.perform(post("/api/class-flights/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createClassFlightDto)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.status").value(201))
+                                .andExpect(jsonPath("$.data").exists());
 
-        verify(classFlightService).createClassFlight(any(CreateClassFlightDto.class));
-    }
+                verify(classFlightService).createClassFlight(any(CreateClassFlightDto.class));
+        }
 
-    @Test
-    void testUpdateClassFlightSuccess() throws Exception {
-        when(classFlightService.updateClassFlight(any(UpdateClassFlightDto.class))).thenReturn(classFlightDto1);
+        @Test
+        void testUpdateClassFlightSuccess() throws Exception {
+                when(classFlightService.updateClassFlight(any(UpdateClassFlightDto.class))).thenReturn(classFlightDto1);
 
-        mockMvc.perform(put("/api/class-flights/1/update")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateClassFlightDto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.data").exists());
+                mockMvc.perform(put("/api/class-flights/1/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateClassFlightDto)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.data").exists());
 
-        verify(classFlightService).updateClassFlight(any(UpdateClassFlightDto.class));
-    }
+                verify(classFlightService).updateClassFlight(any(UpdateClassFlightDto.class));
+        }
 
-    @Test
-    void testDeleteClassFlightSuccess() throws Exception {
-        doNothing().when(classFlightService).deleteClassFlight(1);
+        @Test
+        void testDeleteClassFlightSuccess() throws Exception {
+                doNothing().when(classFlightService).deleteClassFlight(1);
 
-        mockMvc.perform(delete("/api/class-flights/1/delete"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200));
+                mockMvc.perform(delete("/api/class-flights/1/delete"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200));
 
-        verify(classFlightService).deleteClassFlight(1);
-    }
+                verify(classFlightService).deleteClassFlight(1);
+        }
+
+        @Test
+        void testDeleteClassFlightNotFound() throws Exception {
+                doThrow(new RuntimeException("Class Flight not found")).when(classFlightService).deleteClassFlight(999);
+
+                mockMvc.perform(delete("/api/class-flights/999/delete"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
+                                .andExpect(jsonPath("$.message", containsString("Class Flight not found")));
+
+                verify(classFlightService).deleteClassFlight(999);
+        }
+
+        @Test
+        void testGetAvailableClassFlightsSuccess() throws Exception {
+                List<ReadClassFlightDto> classFlights = Arrays.asList(classFlightDto1, classFlightDto2);
+                when(classFlightService.getClassFlightsByFlightId("FL001")).thenReturn(classFlights);
+
+                mockMvc.perform(get("/api/class-flights/available").param("flightId", "FL001"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.message")
+                                                .value("Available class flights retrieved successfully"))
+                                .andExpect(jsonPath("$.data", hasSize(2)));
+
+                verify(classFlightService).getClassFlightsByFlightId("FL001");
+        }
+
+        @Test
+        void testGetAvailableClassFlightsServerError() throws Exception {
+                when(classFlightService.getClassFlightsByFlightId("FL001")).thenThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/class-flights/available").param("flightId", "FL001"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message",
+                                                containsString("Failed to retrieve available class flights")));
+        }
 }

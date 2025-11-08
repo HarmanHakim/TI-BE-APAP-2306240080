@@ -5,7 +5,9 @@ import io.harman.flight_be.dto.flight.ReadFlightDto;
 import io.harman.flight_be.dto.flight.UpdateFlightDto;
 import io.harman.flight_be.model.Airline;
 import io.harman.flight_be.model.Airplane;
+import io.harman.flight_be.model.ClassFlight;
 import io.harman.flight_be.model.Flight;
+import java.math.BigDecimal;
 import io.harman.flight_be.repository.AirlineRepository;
 import io.harman.flight_be.repository.AirplaneRepository;
 import io.harman.flight_be.repository.BookingRepository;
@@ -318,5 +320,65 @@ class FlightServiceImplTest {
 
         assertEquals(2, result.size());
         verify(flightRepository).findUpcomingFlights(any(LocalDateTime.class));
+    }
+
+    @Test
+    void testGetFlightsDepartingToday() {
+        List<Flight> flights = Arrays.asList(flight1);
+        when(flightRepository.findFlightsDepartingOnDate(any(LocalDateTime.class))).thenReturn(flights);
+
+        List<ReadFlightDto> result = flightService.getFlightsDepartingToday();
+
+        assertEquals(1, result.size());
+        verify(flightRepository).findFlightsDepartingOnDate(any(LocalDateTime.class));
+    }
+
+    @Test
+    void testGetFlightsByAirline() {
+        List<Flight> flights = Arrays.asList(flight1);
+        when(flightRepository.findByAirlineIdAndIsDeletedFalse("GA")).thenReturn(flights);
+
+        List<ReadFlightDto> result = flightService.getFlightsByAirline("GA");
+
+        assertEquals(1, result.size());
+        verify(flightRepository).findByAirlineIdAndIsDeletedFalse("GA");
+    }
+
+    @Test
+    void testGetFlightsWithAvailableSeats() {
+        // Prepare a class flight and add to flight1
+        ClassFlight classFlight = ClassFlight.builder()
+                .id(1)
+                .classType("Economy")
+                .seatCapacity(180)
+                .availableSeats(50)
+                .price(new BigDecimal("150000"))
+                .build();
+
+        flight1.setClasses(Arrays.asList(classFlight));
+        flight1.setStatus(2); // In Flight to test status label mapping
+
+        List<Flight> flights = Arrays.asList(flight1);
+        when(flightRepository.findFlightsWithAvailableSeats()).thenReturn(flights);
+
+        List<ReadFlightDto> result = flightService.getFlightsWithAvailableSeats();
+
+        assertEquals(1, result.size());
+
+        ReadFlightDto dto = result.get(0);
+        // classesSummary mapping
+        assertNotNull(dto.getClasses());
+        assertEquals(1, dto.getClasses().size());
+        ReadFlightDto.ClassFlightSummary summary = dto.getClasses().get(0);
+        assertEquals(1, summary.getId());
+        assertEquals("Economy", summary.getClassType());
+        assertEquals(180, summary.getSeatCapacity());
+        assertEquals(50, summary.getAvailableSeats());
+        assertEquals(new BigDecimal("150000"), summary.getPrice());
+
+        // status label mapping for status 2
+        assertEquals("In Flight", dto.getStatusLabel());
+
+        verify(flightRepository).findFlightsWithAvailableSeats();
     }
 }

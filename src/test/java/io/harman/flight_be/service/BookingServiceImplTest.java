@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -343,5 +344,53 @@ class BookingServiceImplTest {
 
         assertEquals(2, result.size());
         verify(bookingRepository).findByCreatedAtBetweenAndIsDeletedFalse(start, end);
+    }
+
+    @Test
+    void testGetBookingStatistics() {
+        LocalDateTime start = LocalDateTime.now().minusDays(7);
+        LocalDateTime end = LocalDateTime.now().plusDays(7);
+
+        Booking statBooking1 = Booking.builder()
+                .id("BS001")
+                .flightId("FL001")
+                .classFlightId(1)
+                .status(1)
+                .totalPrice(new BigDecimal("100"))
+                .isDeleted(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        Booking statBooking2 = Booking.builder()
+                .id("BS002")
+                .flightId("FL001")
+                .classFlightId(1)
+                .status(2)
+                .totalPrice(new BigDecimal("200"))
+                .isDeleted(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        List<Booking> bookings = Arrays.asList(statBooking1, statBooking2);
+
+        when(bookingRepository.findByCreatedAtBetweenAndIsDeletedFalse(start, end)).thenReturn(bookings);
+        when(flightRepository.findById("FL001")).thenReturn(Optional.of(flight));
+
+        Map<String, Object> result = bookingService.getBookingStatistics(start, end);
+
+        // totalBookings should be 2 (both statuses 1 and 2 are counted)
+        assertEquals(2, ((Integer) result.get("totalBookings")).intValue());
+
+        // overall revenue should be 100 + 200 = 300
+        assertEquals(new BigDecimal("300"), (BigDecimal) result.get("potentialRevenue"));
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> flightStats = (List<Map<String, Object>>) result.get("flightStats");
+        assertEquals(1, flightStats.size());
+
+        Map<String, Object> stat = flightStats.get(0);
+        assertEquals("FL001", stat.get("flightId"));
+        assertEquals(2, ((Integer) stat.get("bookingCount")).intValue());
+        assertEquals(new BigDecimal("300"), (BigDecimal) stat.get("potentialRevenue"));
     }
 }

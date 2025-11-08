@@ -29,6 +29,8 @@ import io.harman.flight_be.dto.seat.ReadSeatDto;
 import io.harman.flight_be.dto.seat.UpdateSeatDto;
 import io.harman.flight_be.model.ClassFlight;
 import io.harman.flight_be.model.Seat;
+import io.harman.flight_be.model.Passenger;
+import io.harman.flight_be.model.Flight;
 import io.harman.flight_be.repository.ClassFlightRepository;
 import io.harman.flight_be.repository.PassengerRepository;
 import io.harman.flight_be.repository.SeatRepository;
@@ -235,5 +237,175 @@ class SeatServiceImplTest {
         assertEquals(1, result.size());
         assertTrue(result.get(0).getIsAvailable());
         verify(seatRepository).findByClassFlightIdAndIsAvailableTrueOrderBySeatNumberAsc(1);
+    }
+
+    @Test
+    void testGetSeatsByFlightId() {
+        // attach classFlight with flight to seat1 to test mapping
+        Flight flight = Flight.builder().id("FL001").build();
+        classFlight.setFlight(flight);
+        seat1.setClassFlight(classFlight);
+
+        List<Seat> seats = Arrays.asList(seat1, seat2);
+        when(seatRepository.findByFlightId("FL001")).thenReturn(seats);
+
+        List<ReadSeatDto> result = seatService.getSeatsByFlightId("FL001");
+
+        assertEquals(2, result.size());
+        // first seat should map flightId and classType
+        ReadSeatDto dto = result.get(0);
+        assertEquals("FL001", dto.getFlightId());
+        assertEquals("Economy", dto.getClassType());
+        verify(seatRepository).findByFlightId("FL001");
+    }
+
+    @Test
+    void testGetAvailableSeatsByFlightId() {
+        List<Seat> seats = Arrays.asList(seat1);
+        when(seatRepository.findAvailableSeatsByFlightId("FL001")).thenReturn(seats);
+
+        List<ReadSeatDto> result = seatService.getAvailableSeatsByFlightId("FL001");
+
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).getIsAvailable());
+        verify(seatRepository).findAvailableSeatsByFlightId("FL001");
+    }
+
+    @Test
+    void testAssignSeatToPassengerSuccess() {
+        UUID passengerId = UUID.randomUUID();
+        Passenger passenger = Passenger.builder().id(passengerId).fullName("John Doe").build();
+
+        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(passenger));
+        when(seatRepository.findById(1L)).thenReturn(Optional.of(seat1), Optional.of(Seat.builder()
+                .id(1L)
+                .classFlightId(1)
+                .seatNumber("1A")
+                .isAvailable(false)
+                .passengerId(passengerId)
+                .build()));
+        when(seatRepository.assignSeatToPassenger(1L, passengerId)).thenReturn(1);
+
+        ReadSeatDto result = seatService.assignSeatToPassenger(1L, passengerId);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals(passengerId, result.getPassengerId());
+        verify(passengerRepository).findById(passengerId);
+        verify(seatRepository).assignSeatToPassenger(1L, passengerId);
+    }
+
+    @Test
+    void testAssignSeatToPassengerSeatNotFound() {
+        UUID passengerId = UUID.randomUUID();
+        Passenger passenger = Passenger.builder().id(passengerId).fullName("John Doe").build();
+
+        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(passenger));
+        when(seatRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> seatService.assignSeatToPassenger(1L, passengerId));
+
+        assertTrue(ex.getMessage().contains("not found"));
+    }
+
+    @Test
+    void testAssignSeatToPassengerAlreadyAssigned() {
+        UUID passengerId = UUID.randomUUID();
+        Passenger passenger = Passenger.builder().id(passengerId).fullName("John Doe").build();
+
+        seat2.setIsAvailable(false);
+        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(passenger));
+        when(seatRepository.findById(2L)).thenReturn(Optional.of(seat2));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> seatService.assignSeatToPassenger(2L, passengerId));
+
+        assertTrue(ex.getMessage().contains("already assigned"));
+    }
+
+    @Test
+    void testAssignSeatToPassengerWithClassFlightSuccess() {
+        UUID passengerId = UUID.randomUUID();
+        Passenger passenger = Passenger.builder().id(passengerId).fullName("Jane Doe").build();
+
+        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(passenger));
+        when(seatRepository.findById(1L)).thenReturn(Optional.of(seat1), Optional.of(Seat.builder()
+                .id(1L)
+                .classFlightId(1)
+                .seatNumber("1A")
+                .isAvailable(false)
+                .passengerId(passengerId)
+                .build()));
+        when(seatRepository.assignSeatToPassenger(1L, passengerId)).thenReturn(1);
+
+        ReadSeatDto result = seatService.assignSeatToPassenger(1L, passengerId, 1);
+
+        assertNotNull(result);
+        assertEquals(passengerId, result.getPassengerId());
+    }
+
+    @Test
+    void testAssignSeatToPassengerWithClassFlightMismatch() {
+        UUID passengerId = UUID.randomUUID();
+        Passenger passenger = Passenger.builder().id(passengerId).fullName("Jane Doe").build();
+
+        seat1.setClassFlightId(1);
+        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(passenger));
+        when(seatRepository.findById(1L)).thenReturn(Optional.of(seat1));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> seatService.assignSeatToPassenger(1L, passengerId, 2));
+
+        assertTrue(ex.getMessage().contains("does not belong"));
+    }
+
+    @Test
+    void testReleaseSeatSuccess() {
+        when(seatRepository.releaseSeat(1L)).thenReturn(1);
+        when(seatRepository.findById(1L)).thenReturn(Optional.of(seat1));
+
+        ReadSeatDto result = seatService.releaseSeat(1L);
+
+        assertNotNull(result);
+        verify(seatRepository).releaseSeat(1L);
+    }
+
+    @Test
+    void testReleaseSeatNotFound() {
+        when(seatRepository.releaseSeat(999L)).thenReturn(0);
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> seatService.releaseSeat(999L));
+
+        assertTrue(ex.getMessage().contains("not found"));
+    }
+
+    @Test
+    void testReleaseSeatsByPassenger() {
+        UUID pid = UUID.randomUUID();
+        // no stubbing required for void/non-void repository method - just verify
+        // interaction
+        seatService.releaseSeatsByPassenger(pid);
+
+        verify(seatRepository).releaseSeatsByPassenger(pid);
+    }
+
+    @Test
+    void testIsSeatAvailable() {
+        when(seatRepository.isSeatAvailable(1L)).thenReturn(true);
+        when(seatRepository.isSeatAvailable(2L)).thenReturn(false);
+
+        assertTrue(seatService.isSeatAvailable(1L));
+        assertEquals(false, seatService.isSeatAvailable(2L));
+    }
+
+    @Test
+    void testGenerateSeatCode() {
+        String code = seatService.generateSeatCode("FL001", "Economy", 12L);
+        assertEquals("FL001-EC012", code);
+
+        // classType null or short -> prefix not applied
+        assertEquals("FL001-005", seatService.generateSeatCode("FL001", "X", 5L));
     }
 }

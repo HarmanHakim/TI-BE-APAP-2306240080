@@ -151,4 +151,91 @@ class SeatRestControllerTest {
 
         verify(seatService).deleteSeat(1L);
     }
+
+        @Test
+        void testDeleteSeatNotFound() throws Exception {
+                doThrow(new RuntimeException("Seat not found")).when(seatService).deleteSeat(999L);
+
+                mockMvc.perform(delete("/api/seats/999/delete"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404))
+                                .andExpect(jsonPath("$.message", containsString("Seat not found")));
+
+                verify(seatService).deleteSeat(999L);
+        }
+
+        @Test
+        void testAssignSeatSuccess() throws Exception {
+                UUID pid = UUID.randomUUID();
+                when(seatService.assignSeatToPassenger(eq(1L), eq(pid), eq(1))).thenReturn(seatDto1);
+
+                mockMvc.perform(post("/api/seats/1/assign")
+                                .param("passengerId", pid.toString())
+                                .param("classFlightId", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.data.id").value(1));
+
+                verify(seatService).assignSeatToPassenger(eq(1L), eq(pid), eq(1));
+        }
+
+        @Test
+        void testAssignSeatBadRequest() throws Exception {
+                UUID pid = UUID.randomUUID();
+                when(seatService.assignSeatToPassenger(eq(1L), eq(pid), eq(1)))
+                                .thenThrow(new RuntimeException("Seat does not belong to the specified class flight"));
+
+                mockMvc.perform(post("/api/seats/1/assign")
+                                .param("passengerId", pid.toString())
+                                .param("classFlightId", "1"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.message", containsString("does not belong")));
+        }
+
+        @Test
+        void testReleaseSeatSuccess() throws Exception {
+                when(seatService.releaseSeat(1L)).thenReturn(seatDto1);
+
+                mockMvc.perform(post("/api/seats/1/release"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.data.id").value(1));
+
+                verify(seatService).releaseSeat(1L);
+        }
+
+        @Test
+        void testReleaseSeatBadRequest() throws Exception {
+                when(seatService.releaseSeat(1L)).thenThrow(new RuntimeException("Cannot release seat"));
+
+                mockMvc.perform(post("/api/seats/1/release"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.message", containsString("Cannot release")));
+        }
+
+        @Test
+        void testGetAvailableSeatsEndpointSuccess() throws Exception {
+                List<ReadSeatDto> seats = Arrays.asList(seatDto1, seatDto2);
+                when(seatService.getSeatsByClassFlightId(1)).thenReturn(seats);
+
+                mockMvc.perform(get("/api/seats/available").param("classFlightId", "1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.data", hasSize(1)))
+                                .andExpect(jsonPath("$.data[0].seatNumber").value("1A"));
+
+                verify(seatService).getSeatsByClassFlightId(1);
+        }
+
+        @Test
+        void testGetAvailableSeatsEndpointServerError() throws Exception {
+                when(seatService.getSeatsByClassFlightId(1)).thenThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/seats/available").param("classFlightId", "1"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve available seats")));
+        }
 }
