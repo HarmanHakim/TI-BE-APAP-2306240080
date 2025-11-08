@@ -60,16 +60,6 @@ jacoco {
 	toolVersion = "0.8.13"
 }
 
-
-jacocoTestReport {
-	dependsOn test
-	reports {
-		xml.required = true
-		csv.required = false
-		html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
-	}
-}
-
 // Define a list of exclusion patterns
 def jacocoExclude = [
     '**/config/**', 
@@ -79,12 +69,16 @@ def jacocoExclude = [
     '**/dto/**', 
 ]
 
+
 jacocoTestReport {
-    // This makes sure tests run before generating the report
-    dependsOn test
-    
-    // Use afterEvaluate to ensure all class directories are set up before filtering
-    afterEvaluate {
+	dependsOn test
+	reports {
+		xml.required = true
+		csv.required = false
+		html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+	}
+
+	afterEvaluate {
         // Filter the classes included in the JaCoCo report
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: jacocoExclude)

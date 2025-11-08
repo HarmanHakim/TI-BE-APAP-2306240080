@@ -325,7 +325,9 @@ class FlightRestControllerTest {
 
         @Test
         void testGetAllFlightsServerErrorCheckedException() throws Exception {
-                when(flightService.getAllFlights()).thenAnswer(invocation -> { throw new Exception("checked failure"); });
+                when(flightService.getAllFlights()).thenAnswer(invocation -> {
+                        throw new Exception("checked failure");
+                });
 
                 mockMvc.perform(get("/api/flights/all"))
                                 .andExpect(status().isInternalServerError())
@@ -335,7 +337,9 @@ class FlightRestControllerTest {
 
         @Test
         void testGetFlightByIdServerErrorCheckedException() throws Exception {
-                when(flightService.getFlightById("FL001")).thenAnswer(invocation -> { throw new Exception("DB error"); });
+                when(flightService.getFlightById("FL001")).thenAnswer(invocation -> {
+                        throw new Exception("DB error");
+                });
 
                 mockMvc.perform(get("/api/flights/FL001"))
                                 .andExpect(status().isInternalServerError())
@@ -346,7 +350,9 @@ class FlightRestControllerTest {
         @Test
         void testCreateFlightServerErrorCheckedException() throws Exception {
                 when(flightService.createFlight(any(CreateFlightDto.class)))
-                                .thenAnswer(invocation -> { throw new Exception("create checked error"); });
+                                .thenAnswer(invocation -> {
+                                        throw new Exception("create checked error");
+                                });
 
                 mockMvc.perform(post("/api/flights/create")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -359,7 +365,9 @@ class FlightRestControllerTest {
         @Test
         void testUpdateFlightServerErrorCheckedException() throws Exception {
                 when(flightService.updateFlight(any(UpdateFlightDto.class)))
-                                .thenAnswer(invocation -> { throw new Exception("update checked error"); });
+                                .thenAnswer(invocation -> {
+                                        throw new Exception("update checked error");
+                                });
 
                 mockMvc.perform(put("/api/flights/FL001/update")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -371,7 +379,9 @@ class FlightRestControllerTest {
 
         @Test
         void testDeleteFlightServerErrorCheckedException() throws Exception {
-                doAnswer(invocation -> { throw new Exception("delete checked error"); })
+                doAnswer(invocation -> {
+                        throw new Exception("delete checked error");
+                })
                                 .when(flightService).deleteFlight("FL001");
 
                 mockMvc.perform(delete("/api/flights/FL001/delete"))
@@ -382,17 +392,22 @@ class FlightRestControllerTest {
 
         @Test
         void testGetUpcomingFlightsServerErrorCheckedException() throws Exception {
-                when(flightService.getUpcomingFlights()).thenAnswer(invocation -> { throw new Exception("upcoming checked error"); });
+                when(flightService.getUpcomingFlights()).thenAnswer(invocation -> {
+                        throw new Exception("upcoming checked error");
+                });
 
                 mockMvc.perform(get("/api/flights/upcoming"))
                                 .andExpect(status().isInternalServerError())
                                 .andExpect(jsonPath("$.status").value(500))
-                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve upcoming flights")));
+                                .andExpect(jsonPath("$.message",
+                                                containsString("Failed to retrieve upcoming flights")));
         }
 
         @Test
         void testGetFlightsDepartingTodayServerErrorCheckedException() throws Exception {
-                when(flightService.getFlightsDepartingToday()).thenAnswer(invocation -> { throw new Exception("today checked error"); });
+                when(flightService.getFlightsDepartingToday()).thenAnswer(invocation -> {
+                        throw new Exception("today checked error");
+                });
 
                 mockMvc.perform(get("/api/flights/today"))
                                 .andExpect(status().isInternalServerError())
@@ -402,7 +417,9 @@ class FlightRestControllerTest {
 
         @Test
         void testGetFlightsWithAvailableSeatsServerErrorCheckedException() throws Exception {
-                when(flightService.getFlightsWithAvailableSeats()).thenAnswer(invocation -> { throw new Exception("available checked error"); });
+                when(flightService.getFlightsWithAvailableSeats()).thenAnswer(invocation -> {
+                        throw new Exception("available checked error");
+                });
 
                 mockMvc.perform(get("/api/flights/available"))
                                 .andExpect(status().isInternalServerError())
