@@ -229,7 +229,7 @@ public class BookingServiceImpl implements BookingService {
     public Map<String, Object> getBookingStatistics(LocalDateTime start, LocalDateTime end) {
         List<Booking> bookings = bookingRepository.findByCreatedAtBetweenAndIsDeletedFalse(start, end);
 
-        // Filter only Paid and Unpaid bookings
+        // Filter only Paid and Unpaid bookings (status 1 and 2)
         List<Booking> validBookings = bookings.stream()
                 .filter(b -> b.getStatus() == 1 || b.getStatus() == 2)
                 .collect(Collectors.toList());
@@ -244,24 +244,33 @@ public class BookingServiceImpl implements BookingService {
             String flightId = entry.getKey();
             List<Booking> flightBookings = entry.getValue();
 
-            BigDecimal totalRevenue = flightBookings.stream()
+            // Get flight details
+            Flight flight = flightRepository.findById(flightId).orElse(null);
+            if (flight == null) continue;
+
+            BigDecimal potentialRevenue = flightBookings.stream()
                     .map(Booking::getTotalPrice)
                     .filter(price -> price != null)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             int bookingCount = flightBookings.size();
-            int totalPassengers = flightBookings.stream()
-                    .mapToInt(Booking::getPassengerCount)
-                    .sum();
 
             Map<String, Object> stat = new HashMap<>();
             stat.put("flightId", flightId);
+            stat.put("flightNumber", flight.getId());
+            stat.put("route", flight.getOriginAirportCode() + " → " + flight.getDestinationAirportCode());
             stat.put("bookingCount", bookingCount);
-            stat.put("totalPassengers", totalPassengers);
-            stat.put("totalRevenue", totalRevenue);
+            stat.put("potentialRevenue", potentialRevenue);
 
             flightStats.add(stat);
         }
+
+        // Sort by potential revenue descending
+        flightStats.sort((a, b) -> {
+            BigDecimal revenueA = (BigDecimal) a.get("potentialRevenue");
+            BigDecimal revenueB = (BigDecimal) b.get("potentialRevenue");
+            return revenueB.compareTo(revenueA);
+        });
 
         // Calculate overall totals
         BigDecimal overallRevenue = validBookings.stream()
@@ -269,16 +278,10 @@ public class BookingServiceImpl implements BookingService {
                 .filter(price -> price != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        int overallPassengers = validBookings.stream()
-                .mapToInt(Booking::getPassengerCount)
-                .sum();
-
         Map<String, Object> result = new HashMap<>();
-        result.put("period", Map.of("start", start, "end", end));
         result.put("totalBookings", validBookings.size());
-        result.put("totalPassengers", overallPassengers);
-        result.put("totalRevenue", overallRevenue);
-        result.put("flightStatistics", flightStats);
+        result.put("potentialRevenue", overallRevenue);
+        result.put("flightStats", flightStats);
 
         return result;
     }
