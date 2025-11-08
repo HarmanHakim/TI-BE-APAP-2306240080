@@ -1,18 +1,29 @@
 package io.harman.flight_be.controller;
 
-import io.harman.flight_be.dto.seat.*;
-import io.harman.flight_be.dto.rest.BaseResponseDTO;
-import io.harman.flight_be.service.SeatService;
-import jakarta.validation.Valid;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import io.harman.flight_be.dto.rest.BaseResponseDTO;
+import io.harman.flight_be.dto.seat.CreateSeatDto;
+import io.harman.flight_be.dto.seat.ReadSeatDto;
+import io.harman.flight_be.dto.seat.UpdateSeatDto;
+import io.harman.flight_be.service.SeatService;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/seats")
@@ -28,18 +39,18 @@ public class SeatRestController {
     public ResponseEntity<BaseResponseDTO<List<ReadSeatDto>>> getAllSeats(
             @RequestParam(required = false) Integer classFlightId,
             @RequestParam(required = false) Boolean isAvailable) {
-        
+
         var baseResponseDTO = new BaseResponseDTO<List<ReadSeatDto>>();
 
         try {
             List<ReadSeatDto> seats;
-            
+
             if (classFlightId != null) {
                 seats = seatService.getSeatsByClassFlightId(classFlightId);
                 if (isAvailable != null) {
                     seats = seats.stream()
-                        .filter(seat -> seat.getIsAvailable().equals(isAvailable))
-                        .toList();
+                            .filter(seat -> seat.getIsAvailable().equals(isAvailable))
+                            .toList();
                 }
             } else {
                 seats = seatService.getAllSeats();
@@ -205,19 +216,13 @@ public class SeatRestController {
     @PostMapping("/{id}/assign")
     public ResponseEntity<BaseResponseDTO<ReadSeatDto>> assignSeat(
             @PathVariable Long id,
-            @RequestParam UUID passengerId) {
+            @RequestParam UUID passengerId,
+            @RequestParam Integer classFlightId) {
         var baseResponseDTO = new BaseResponseDTO<ReadSeatDto>();
 
         try {
-            ReadSeatDto seat = seatService.getSeatById(id);
-            
-            // Create update DTO to mark seat as occupied
-            var updateDto = new UpdateSeatDto();
-            updateDto.setId(id);
-            updateDto.setPassengerId(passengerId);
-            updateDto.setIsAvailable(false);
-            
-            seat = seatService.updateSeat(updateDto);
+            // Use the dedicated assignSeatToPassenger method
+            ReadSeatDto seat = seatService.assignSeatToPassenger(id, passengerId);
 
             baseResponseDTO.setStatus(HttpStatus.OK.value());
             baseResponseDTO.setData(seat);
@@ -269,14 +274,14 @@ public class SeatRestController {
     @GetMapping("/available")
     public ResponseEntity<BaseResponseDTO<List<ReadSeatDto>>> getAvailableSeats(
             @RequestParam Integer classFlightId) {
-        
+
         var baseResponseDTO = new BaseResponseDTO<List<ReadSeatDto>>();
 
         try {
             List<ReadSeatDto> seats = seatService.getSeatsByClassFlightId(classFlightId)
-                .stream()
-                .filter(seat -> Boolean.TRUE.equals(seat.getIsAvailable()))
-                .toList();
+                    .stream()
+                    .filter(seat -> Boolean.TRUE.equals(seat.getIsAvailable()))
+                    .toList();
 
             baseResponseDTO.setStatus(HttpStatus.OK.value());
             baseResponseDTO.setData(seats);
