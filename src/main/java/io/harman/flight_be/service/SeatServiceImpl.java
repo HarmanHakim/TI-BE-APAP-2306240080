@@ -1,5 +1,12 @@
 package io.harman.flight_be.service;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import io.harman.flight_be.dto.seat.CreateSeatDto;
 import io.harman.flight_be.dto.seat.ReadSeatDto;
 import io.harman.flight_be.dto.seat.UpdateSeatDto;
@@ -7,12 +14,6 @@ import io.harman.flight_be.model.Seat;
 import io.harman.flight_be.repository.ClassFlightRepository;
 import io.harman.flight_be.repository.PassengerRepository;
 import io.harman.flight_be.repository.SeatRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -117,10 +118,47 @@ public class SeatServiceImpl implements SeatService {
     }
 
     @Override
+    @Transactional
     public ReadSeatDto assignSeatToPassenger(Long seatId, UUID passengerId) {
         // Validate passenger exists
         passengerRepository.findById(passengerId)
                 .orElseThrow(() -> new RuntimeException("Passenger with ID " + passengerId + " not found"));
+
+        // Validate seat exists and is available
+        Seat seat = seatRepository.findById(seatId)
+                .orElseThrow(() -> new RuntimeException("Seat with ID " + seatId + " not found"));
+        
+        if (!seat.getIsAvailable()) {
+            throw new RuntimeException("Seat is already assigned to another passenger");
+        }
+
+        int updated = seatRepository.assignSeatToPassenger(seatId, passengerId);
+        if (updated == 0) {
+            throw new RuntimeException("Cannot assign seat. Seat is not available or not found.");
+        }
+
+        return getSeatById(seatId);
+    }
+
+    @Override
+    @Transactional
+    public ReadSeatDto assignSeatToPassenger(Long seatId, UUID passengerId, Integer classFlightId) {
+        // Validate passenger exists
+        passengerRepository.findById(passengerId)
+                .orElseThrow(() -> new RuntimeException("Passenger with ID " + passengerId + " not found"));
+
+        // Validate seat exists and is available
+        Seat seat = seatRepository.findById(seatId)
+                .orElseThrow(() -> new RuntimeException("Seat with ID " + seatId + " not found"));
+        
+        // Validate seat belongs to the specified class flight
+        if (!seat.getClassFlightId().equals(classFlightId)) {
+            throw new RuntimeException("Seat does not belong to the specified class flight");
+        }
+        
+        if (!seat.getIsAvailable()) {
+            throw new RuntimeException("Seat is already assigned to another passenger");
+        }
 
         int updated = seatRepository.assignSeatToPassenger(seatId, passengerId);
         if (updated == 0) {

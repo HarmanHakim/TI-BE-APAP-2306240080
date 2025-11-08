@@ -221,8 +221,8 @@ public class SeatRestController {
         var baseResponseDTO = new BaseResponseDTO<ReadSeatDto>();
 
         try {
-            // Use the dedicated assignSeatToPassenger method
-            ReadSeatDto seat = seatService.assignSeatToPassenger(id, passengerId);
+            // Use the overloaded method with classFlightId validation
+            ReadSeatDto seat = seatService.assignSeatToPassenger(id, passengerId, classFlightId);
 
             baseResponseDTO.setStatus(HttpStatus.OK.value());
             baseResponseDTO.setData(seat);

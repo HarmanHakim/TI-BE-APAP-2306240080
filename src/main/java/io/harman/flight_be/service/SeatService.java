@@ -32,6 +32,8 @@ public interface SeatService {
     // Seat assignment operations
     ReadSeatDto assignSeatToPassenger(Long seatId, UUID passengerId);
     
+    ReadSeatDto assignSeatToPassenger(Long seatId, UUID passengerId, Integer classFlightId);
+    
     ReadSeatDto releaseSeat(Long seatId);
     
     void releaseSeatsByPassenger(UUID passengerId);
