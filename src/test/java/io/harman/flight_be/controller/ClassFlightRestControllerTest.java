@@ -204,4 +204,114 @@ class ClassFlightRestControllerTest {
                                 .andExpect(jsonPath("$.message",
                                                 containsString("Failed to retrieve available class flights")));
         }
+
+        @Test
+        void testGetAllClassFlightsRuntimeExceptionServerError() throws Exception {
+                when(classFlightService.getAllClassFlights()).thenThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/class-flights/all"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(classFlightService).getAllClassFlights();
+        }
+
+        @Test
+        void testGetAllClassFlightsCheckedExceptionServerError() throws Exception {
+                when(classFlightService.getAllClassFlights()).thenAnswer(inv -> {
+                        throw new Exception("checked DB");
+                });
+
+                mockMvc.perform(get("/api/class-flights/all"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(classFlightService).getAllClassFlights();
+        }
+
+        @Test
+        void testGetClassFlightByIdCheckedExceptionServerError() throws Exception {
+                when(classFlightService.getClassFlightById(1)).thenAnswer(inv -> {
+                        throw new Exception("checked unexpected");
+                });
+
+                mockMvc.perform(get("/api/class-flights/1"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(classFlightService).getClassFlightById(1);
+        }
+
+        @Test
+        void testCreateClassFlightRuntimeExceptionBadRequest() throws Exception {
+                when(classFlightService.createClassFlight(any(CreateClassFlightDto.class)))
+                                .thenThrow(new RuntimeException("create failed"));
+
+                mockMvc.perform(post("/api/class-flights/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createClassFlightDto)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400));
+
+                verify(classFlightService).createClassFlight(any(CreateClassFlightDto.class));
+        }
+
+        @Test
+        void testCreateClassFlightCheckedExceptionServerError() throws Exception {
+                when(classFlightService.createClassFlight(any(CreateClassFlightDto.class)))
+                                .thenAnswer(inv -> {
+                                        throw new Exception("checked create failed");
+                                });
+
+                mockMvc.perform(post("/api/class-flights/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createClassFlightDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(classFlightService).createClassFlight(any(CreateClassFlightDto.class));
+        }
+
+        @Test
+        void testUpdateClassFlightRuntimeExceptionBadRequest() throws Exception {
+                when(classFlightService.updateClassFlight(any(UpdateClassFlightDto.class)))
+                                .thenThrow(new RuntimeException("update failed"));
+
+                mockMvc.perform(put("/api/class-flights/1/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateClassFlightDto)))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400));
+
+                verify(classFlightService).updateClassFlight(any(UpdateClassFlightDto.class));
+        }
+
+        @Test
+        void testUpdateClassFlightCheckedExceptionServerError() throws Exception {
+                when(classFlightService.updateClassFlight(any(UpdateClassFlightDto.class)))
+                                .thenAnswer(inv -> {
+                                        throw new Exception("checked update failed");
+                                });
+
+                mockMvc.perform(put("/api/class-flights/1/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateClassFlightDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(classFlightService).updateClassFlight(any(UpdateClassFlightDto.class));
+        }
+
+        @Test
+        void testDeleteClassFlightCheckedExceptionServerError() throws Exception {
+                org.mockito.Mockito.doAnswer(inv -> {
+                        throw new Exception("checked delete failed");
+                }).when(classFlightService).deleteClassFlight(1);
+
+                mockMvc.perform(delete("/api/class-flights/1/delete"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(classFlightService).deleteClassFlight(1);
+        }
 }

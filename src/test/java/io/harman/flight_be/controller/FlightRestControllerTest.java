@@ -322,4 +322,91 @@ class FlightRestControllerTest {
                                 .andExpect(jsonPath("$.status").value(500))
                                 .andExpect(jsonPath("$.message", containsString("Failed to retrieve flights")));
         }
+
+        @Test
+        void testGetAllFlightsServerErrorCheckedException() throws Exception {
+                when(flightService.getAllFlights()).thenAnswer(invocation -> { throw new Exception("checked failure"); });
+
+                mockMvc.perform(get("/api/flights/all"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve flights")));
+        }
+
+        @Test
+        void testGetFlightByIdServerErrorCheckedException() throws Exception {
+                when(flightService.getFlightById("FL001")).thenAnswer(invocation -> { throw new Exception("DB error"); });
+
+                mockMvc.perform(get("/api/flights/FL001"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve flight")));
+        }
+
+        @Test
+        void testCreateFlightServerErrorCheckedException() throws Exception {
+                when(flightService.createFlight(any(CreateFlightDto.class)))
+                                .thenAnswer(invocation -> { throw new Exception("create checked error"); });
+
+                mockMvc.perform(post("/api/flights/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createFlightDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to create flight")));
+        }
+
+        @Test
+        void testUpdateFlightServerErrorCheckedException() throws Exception {
+                when(flightService.updateFlight(any(UpdateFlightDto.class)))
+                                .thenAnswer(invocation -> { throw new Exception("update checked error"); });
+
+                mockMvc.perform(put("/api/flights/FL001/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateFlightDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to update flight")));
+        }
+
+        @Test
+        void testDeleteFlightServerErrorCheckedException() throws Exception {
+                doAnswer(invocation -> { throw new Exception("delete checked error"); })
+                                .when(flightService).deleteFlight("FL001");
+
+                mockMvc.perform(delete("/api/flights/FL001/delete"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to cancel flight")));
+        }
+
+        @Test
+        void testGetUpcomingFlightsServerErrorCheckedException() throws Exception {
+                when(flightService.getUpcomingFlights()).thenAnswer(invocation -> { throw new Exception("upcoming checked error"); });
+
+                mockMvc.perform(get("/api/flights/upcoming"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve upcoming flights")));
+        }
+
+        @Test
+        void testGetFlightsDepartingTodayServerErrorCheckedException() throws Exception {
+                when(flightService.getFlightsDepartingToday()).thenAnswer(invocation -> { throw new Exception("today checked error"); });
+
+                mockMvc.perform(get("/api/flights/today"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve today's flights")));
+        }
+
+        @Test
+        void testGetFlightsWithAvailableSeatsServerErrorCheckedException() throws Exception {
+                when(flightService.getFlightsWithAvailableSeats()).thenAnswer(invocation -> { throw new Exception("available checked error"); });
+
+                mockMvc.perform(get("/api/flights/available"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message", containsString("Failed to retrieve flights")));
+        }
 }

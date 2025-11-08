@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -272,5 +273,61 @@ class PassengerRestControllerTest {
                                 .andExpect(jsonPath("$.status").value(500))
                                 .andExpect(jsonPath("$.message")
                                                 .value(containsString("Failed to retrieve passengers")));
+        }
+
+        @Test
+        void testGetPassengerByIdServerErrorCheckedException() throws Exception {
+                when(passengerService.getPassengerById(passengerId))
+                                .thenAnswer(invocation -> {
+                                        throw new Exception("Database failure");
+                                });
+
+                mockMvc.perform(get("/api/passengers/" + passengerId))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message").value(containsString("Failed to retrieve passenger")));
+        }
+
+        @Test
+        void testCreatePassengerServerErrorCheckedException() throws Exception {
+                when(passengerService.createPassenger(any(CreatePassengerDto.class)))
+                                .thenAnswer(invocation -> {
+                                        throw new Exception("DB create error");
+                                });
+
+                mockMvc.perform(post("/api/passengers/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createPassengerDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message").value(containsString("Failed to create passenger")));
+        }
+
+        @Test
+        void testUpdatePassengerServerErrorCheckedException() throws Exception {
+                when(passengerService.updatePassenger(any(UpdatePassengerDto.class)))
+                                .thenAnswer(invocation -> {
+                                        throw new Exception("DB update error");
+                                });
+
+                mockMvc.perform(put("/api/passengers/" + passengerId + "/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updatePassengerDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message").value(containsString("Failed to update passenger")));
+        }
+
+        @Test
+        void testDeletePassengerServerErrorCheckedException() throws Exception {
+                doAnswer(invocation -> {
+                        throw new Exception("DB delete error");
+                })
+                                .when(passengerService).deletePassenger(passengerId);
+
+                mockMvc.perform(delete("/api/passengers/" + passengerId + "/delete"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500))
+                                .andExpect(jsonPath("$.message").value(containsString("Failed to delete passenger")));
         }
 }

@@ -184,4 +184,170 @@ class AirplaneRestControllerTest {
 
                 verify(airplaneService).activateAirplane("AP002");
         }
+
+        @Test
+        void testGetAllAirplanesServerError() throws Exception {
+                when(airplaneService.getAllAirplanes()).thenThrow(new RuntimeException("DB down"));
+
+                mockMvc.perform(get("/api/airplanes/all"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airplaneService).getAllAirplanes();
+        }
+
+        @Test
+        void testGetAirplaneByIdServerError() throws Exception {
+                when(airplaneService.getAirplaneById("APX")).thenThrow(new RuntimeException("Unexpected"));
+
+                // Service throws RuntimeException -> controller maps to NOT_FOUND for this
+                // endpoint
+                mockMvc.perform(get("/api/airplanes/APX"))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.status").value(404));
+
+                verify(airplaneService).getAirplaneById("APX");
+        }
+
+        @Test
+        void testCreateAirplaneServerError() throws Exception {
+                when(airplaneService.createAirplane(any(CreateAirplaneDto.class)))
+                                .thenThrow(new RuntimeException("create failed"));
+
+                mockMvc.perform(post("/api/airplanes/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createAirplaneDto)))
+                                // Service throws RuntimeException -> controller maps to BAD_REQUEST for create
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400));
+
+                verify(airplaneService).createAirplane(any(CreateAirplaneDto.class));
+        }
+
+        @Test
+        void testUpdateAirplaneServerError() throws Exception {
+                when(airplaneService.updateAirplane(any(UpdateAirplaneDto.class)))
+                                .thenThrow(new RuntimeException("update failed"));
+
+                mockMvc.perform(put("/api/airplanes/AP001/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateAirplaneDto)))
+                                // Service throws RuntimeException -> controller maps to BAD_REQUEST for update
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400));
+
+                verify(airplaneService).updateAirplane(any(UpdateAirplaneDto.class));
+        }
+
+        @Test
+        void testDeleteAirplaneServerError() throws Exception {
+                doThrow(new RuntimeException("delete failed")).when(airplaneService).deleteAirplane("AP001");
+
+                // Service throws RuntimeException -> controller maps to BAD_REQUEST for delete
+                mockMvc.perform(delete("/api/airplanes/AP001/delete"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400));
+
+                verify(airplaneService).deleteAirplane("AP001");
+        }
+
+        @Test
+        void testActivateAirplaneServerError() throws Exception {
+                doThrow(new RuntimeException("activate failed")).when(airplaneService).activateAirplane("AP001");
+
+                // Service throws RuntimeException -> controller maps to BAD_REQUEST for
+                // activate
+                mockMvc.perform(post("/api/airplanes/AP001/activate"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400));
+
+                verify(airplaneService).activateAirplane("AP001");
+        }
+
+        @Test
+        void testGetAllAirplanesCheckedExceptionServerError() throws Exception {
+                when(airplaneService.getAllAirplanes()).thenAnswer(inv -> {
+                        throw new Exception("checked DB down");
+                });
+
+                mockMvc.perform(get("/api/airplanes/all"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airplaneService).getAllAirplanes();
+        }
+
+        @Test
+        void testGetAirplaneByIdCheckedExceptionServerError() throws Exception {
+                when(airplaneService.getAirplaneById("APX")).thenAnswer(inv -> {
+                        throw new Exception("checked unexpected");
+                });
+
+                mockMvc.perform(get("/api/airplanes/APX"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airplaneService).getAirplaneById("APX");
+        }
+
+        @Test
+        void testCreateAirplaneCheckedExceptionServerError() throws Exception {
+                when(airplaneService.createAirplane(any(CreateAirplaneDto.class)))
+                                .thenAnswer(inv -> {
+                                        throw new Exception("checked create failed");
+                                });
+
+                mockMvc.perform(post("/api/airplanes/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createAirplaneDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airplaneService).createAirplane(any(CreateAirplaneDto.class));
+        }
+
+        @Test
+        void testUpdateAirplaneCheckedExceptionServerError() throws Exception {
+                when(airplaneService.updateAirplane(any(UpdateAirplaneDto.class)))
+                                .thenAnswer(inv -> {
+                                        throw new Exception("checked update failed");
+                                });
+
+                mockMvc.perform(put("/api/airplanes/AP001/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateAirplaneDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airplaneService).updateAirplane(any(UpdateAirplaneDto.class));
+        }
+
+        @Test
+        void testDeleteAirplaneCheckedExceptionServerError() throws Exception {
+                // use doAnswer for void method to throw checked Exception
+                org.mockito.Mockito.doAnswer(inv -> {
+                        throw new Exception("checked delete failed");
+                })
+                                .when(airplaneService).deleteAirplane("AP001");
+
+                mockMvc.perform(delete("/api/airplanes/AP001/delete"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airplaneService).deleteAirplane("AP001");
+        }
+
+        @Test
+        void testActivateAirplaneCheckedExceptionServerError() throws Exception {
+                org.mockito.Mockito.doAnswer(inv -> {
+                        throw new Exception("checked activate failed");
+                })
+                                .when(airplaneService).activateAirplane("AP001");
+
+                mockMvc.perform(post("/api/airplanes/AP001/activate"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airplaneService).activateAirplane("AP001");
+        }
 }

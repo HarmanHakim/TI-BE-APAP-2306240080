@@ -282,4 +282,121 @@ class AirlineRestControllerTest {
 
                 verify(airlineService).getDistinctCountries();
         }
+
+        @Test
+        void testGetAllAirlinesCheckedException() throws Exception {
+                when(airlineService.getAllAirlines()).thenAnswer(inv -> {
+                        throw new Exception("checked DB");
+                });
+
+                mockMvc.perform(get("/api/airlines/all"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).getAllAirlines();
+        }
+
+        @Test
+        void testGetAirlineByIdCheckedException() throws Exception {
+                when(airlineService.getAirlineById("GA")).thenAnswer(inv -> {
+                        throw new Exception("checked unexpected");
+                });
+
+                mockMvc.perform(get("/api/airlines/GA"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).getAirlineById("GA");
+        }
+
+        @Test
+        void testCreateAirlineCheckedException() throws Exception {
+                when(airlineService.createAirline(any(CreateAirlineDto.class))).thenAnswer(inv -> {
+                        throw new Exception("checked create failed");
+                });
+
+                mockMvc.perform(post("/api/airlines/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createAirlineDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).createAirline(any(CreateAirlineDto.class));
+        }
+
+        @Test
+        void testUpdateAirlineCheckedException() throws Exception {
+                when(airlineService.updateAirline(any(UpdateAirlineDto.class))).thenAnswer(inv -> {
+                        throw new Exception("checked update failed");
+                });
+
+                mockMvc.perform(put("/api/airlines/GA/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateAirlineDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).updateAirline(any(UpdateAirlineDto.class));
+        }
+
+        @Test
+        void testDeleteAirlineCheckedException() throws Exception {
+                org.mockito.Mockito.doAnswer(inv -> {
+                        throw new Exception("checked delete failed");
+                }).when(airlineService).deleteAirline("GA");
+
+                mockMvc.perform(delete("/api/airlines/GA/delete"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).deleteAirline("GA");
+        }
+
+        @Test
+        void testSearchAirlinesRuntimeException() throws Exception {
+                when(airlineService.searchAirlinesByName("X")).thenThrow(new RuntimeException("search failed"));
+
+                mockMvc.perform(get("/api/airlines/search").param("name", "X"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).searchAirlinesByName("X");
+        }
+
+        @Test
+        void testSearchAirlinesCheckedException() throws Exception {
+                when(airlineService.searchAirlinesByName("X")).thenAnswer(inv -> {
+                        throw new Exception("checked search failed");
+                });
+
+                mockMvc.perform(get("/api/airlines/search").param("name", "X"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).searchAirlinesByName("X");
+        }
+
+        @Test
+        void testGetDistinctCountriesRuntimeException() throws Exception {
+                when(airlineService.getDistinctCountries()).thenThrow(new RuntimeException("countries failed"));
+
+                mockMvc.perform(get("/api/airlines/countries"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).getDistinctCountries();
+        }
+
+        @Test
+        void testGetDistinctCountriesCheckedException() throws Exception {
+                when(airlineService.getDistinctCountries()).thenAnswer(inv -> {
+                        throw new Exception("checked countries failed");
+                });
+
+                mockMvc.perform(get("/api/airlines/countries"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(airlineService).getDistinctCountries();
+        }
 }

@@ -290,4 +290,127 @@ class BookingRestControllerTest {
                                 .andExpect(jsonPath("$.status").value(500))
                                 .andExpect(jsonPath("$.message").value(containsString("Failed to retrieve bookings")));
         }
+
+        @Test
+        void testGetAllBookingsCheckedException() throws Exception {
+                when(bookingService.getAllBookings()).thenAnswer(inv -> {
+                        throw new Exception("checked DB");
+                });
+
+                mockMvc.perform(get("/api/bookings"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(bookingService).getAllBookings();
+        }
+
+        @Test
+        void testGetBookingByIdCheckedException() throws Exception {
+                when(bookingService.getBookingById("BK001")).thenAnswer(inv -> {
+                        throw new Exception("checked unexpected");
+                });
+
+                mockMvc.perform(get("/api/bookings/BK001"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(bookingService).getBookingById("BK001");
+        }
+
+        @Test
+        void testCreateBookingCheckedException() throws Exception {
+                when(bookingService.createBooking(any(CreateBookingDto.class))).thenAnswer(inv -> {
+                        throw new Exception("checked create failed");
+                });
+
+                mockMvc.perform(post("/api/bookings/create")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(createBookingDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(bookingService).createBooking(any(CreateBookingDto.class));
+        }
+
+        @Test
+        void testUpdateBookingCheckedException() throws Exception {
+                when(bookingService.updateBooking(any(UpdateBookingDto.class))).thenAnswer(inv -> {
+                        throw new Exception("checked update failed");
+                });
+
+                mockMvc.perform(put("/api/bookings/BK001/update")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(updateBookingDto)))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(bookingService).updateBooking(any(UpdateBookingDto.class));
+        }
+
+        @Test
+        void testDeleteBookingCheckedException() throws Exception {
+                org.mockito.Mockito.doAnswer(inv -> {
+                        throw new Exception("checked delete failed");
+                }).when(bookingService).deleteBooking("BK001");
+
+                mockMvc.perform(delete("/api/bookings/BK001/delete"))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(bookingService).deleteBooking("BK001");
+        }
+
+        @Test
+        void testGetBookingStatisticsSuccess() throws Exception {
+                java.time.LocalDateTime start = java.time.LocalDateTime.now().minusDays(7);
+                java.time.LocalDateTime end = java.time.LocalDateTime.now();
+
+                when(bookingService.getBookingStatistics(any(java.time.LocalDateTime.class),
+                                any(java.time.LocalDateTime.class)))
+                                .thenReturn(java.util.Map.of("totalBookings", 5, "totalRevenue", 1500000));
+
+                mockMvc.perform(get("/api/bookings/statistics")
+                                .param("start", start.toString())
+                                .param("end", end.toString()))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.status").value(200))
+                                .andExpect(jsonPath("$.data.totalBookings").value(5));
+
+                verify(bookingService).getBookingStatistics(any(java.time.LocalDateTime.class),
+                                any(java.time.LocalDateTime.class));
+        }
+
+        @Test
+        void testGetBookingStatisticsRuntimeException() throws Exception {
+                when(bookingService.getBookingStatistics(any(java.time.LocalDateTime.class),
+                                any(java.time.LocalDateTime.class)))
+                                .thenThrow(new RuntimeException("stats failure"));
+
+                mockMvc.perform(get("/api/bookings/statistics")
+                                .param("start", java.time.LocalDateTime.now().minusDays(1).toString())
+                                .param("end", java.time.LocalDateTime.now().toString()))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(bookingService).getBookingStatistics(any(java.time.LocalDateTime.class),
+                                any(java.time.LocalDateTime.class));
+        }
+
+        @Test
+        void testGetBookingStatisticsCheckedException() throws Exception {
+                when(bookingService.getBookingStatistics(any(java.time.LocalDateTime.class),
+                                any(java.time.LocalDateTime.class)))
+                                .thenAnswer(inv -> {
+                                        throw new Exception("checked stats failed");
+                                });
+
+                mockMvc.perform(get("/api/bookings/statistics")
+                                .param("start", java.time.LocalDateTime.now().minusDays(1).toString())
+                                .param("end", java.time.LocalDateTime.now().toString()))
+                                .andExpect(status().isInternalServerError())
+                                .andExpect(jsonPath("$.status").value(500));
+
+                verify(bookingService).getBookingStatistics(any(java.time.LocalDateTime.class),
+                                any(java.time.LocalDateTime.class));
+        }
 }
