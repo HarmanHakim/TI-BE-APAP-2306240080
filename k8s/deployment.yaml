@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ti-2306240080
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ti-2306240080
+  template:
+    metadata:
+      labels:
+        app: ti-2306240080
+    spec:
+      containers:
+        - name: springboot-container
+          image: harmanhakim/ti-2306240080:REPLACE_ME_TAG
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_URL_PROD
+              valueFrom:
+                configMapKeyRef:
+                  name: ti-2306240080-config
+                  key: DATABASE_URL_PROD
+            - name: DATABASE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: ti-2306240080-config
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ti-2306240080-secret
+                  key: DATABASE_PASSWORD
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ti-2306240080-secret
+                  key: JWT_SECRET_KEY
