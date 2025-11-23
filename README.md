@@ -1,7 +1,13 @@
 # Praktikum 9 - Deployment
 
-## Jawaban README
+## GitHub Link:
+https://github.com/HarmanHakim/sidatingapp-be-2306240080/
+https://github.com/HarmanHakim/sidatingapp-fe-2306240080/
+https://github.com/HarmanHakim/TI-BE-APAP-2306240080
+https://github.com/HarmanHakim/TI-FE-APAP-2306240080
 
+
+## Jawaban README
 ### 1. Bukti Deployment
 Screenshot Pods k3s:
 ![Bukti K3s](image.png)
@@ -341,5 +347,3 @@ spec:
 
 ---
 
-**NPM:** 2306240080  
-**Tanggal:** November 23, 2025
