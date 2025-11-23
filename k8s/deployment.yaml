@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: springboot-container
-          image: harmanhakim/ti-2306240080:REPLACE_ME_TAG
+          image: harmanhakim/flight:REPLACE_ME_TAG
           ports:
             - containerPort: 8080
           env:
