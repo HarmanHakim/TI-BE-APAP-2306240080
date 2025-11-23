@@ -1,11 +1,10 @@
 # Praktikum 9 - Deployment
 
 ## GitHub Link:
-https://github.com/HarmanHakim/sidatingapp-be-2306240080/
-https://github.com/HarmanHakim/sidatingapp-fe-2306240080/
-https://github.com/HarmanHakim/TI-BE-APAP-2306240080
-https://github.com/HarmanHakim/TI-FE-APAP-2306240080
-
+- https://github.com/HarmanHakim/sidatingapp-be-2306240080/
+- https://github.com/HarmanHakim/sidatingapp-fe-2306240080/
+- https://github.com/HarmanHakim/TI-BE-APAP-2306240080
+- https://github.com/HarmanHakim/TI-FE-APAP-2306240080
 
 ## Jawaban README
 ### 1. Bukti Deployment
@@ -15,9 +14,6 @@ Screenshot Pods k3s:
 #### Test Frontend
 Screenshot Sidating FE:
 ![alt text](image-1.png)
-
-Screenshot Flight FE:
-![alt text](image-2.png)
 
 ### 3. Gambar Pipeline CI/CD Improvement + Penjelasan
 
