@@ -2,6 +2,17 @@
 
 ## Jawaban README
 
+### 1. Bukti Deployment
+Screenshot Pods k3s:
+![Bukti K3s](image.png)
+
+#### Test Frontend
+Screenshot Sidating FE:
+![alt text](image-1.png)
+
+Screenshot Flight FE:
+![alt text](image-2.png)
+
 ### 3. Gambar Pipeline CI/CD Improvement + Penjelasan
 
 ```mermaid
