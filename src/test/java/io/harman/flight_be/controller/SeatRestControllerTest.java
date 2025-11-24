@@ -5,6 +5,7 @@ import io.harman.flight_be.dto.seat.CreateSeatDto;
 import io.harman.flight_be.dto.seat.ReadSeatDto;
 import io.harman.flight_be.dto.seat.UpdateSeatDto;
 import io.harman.flight_be.service.SeatService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

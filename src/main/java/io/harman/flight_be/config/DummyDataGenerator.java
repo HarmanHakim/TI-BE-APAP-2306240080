@@ -24,6 +24,12 @@ import io.harman.flight_be.dto.classflight.CreateClassFlightDto;
 import io.harman.flight_be.dto.flight.CreateFlightDto;
 import io.harman.flight_be.dto.passenger.CreatePassengerDto;
 import io.harman.flight_be.dto.seat.CreateSeatDto;
+import io.harman.flight_be.model.loyalty.Coupon;
+import io.harman.flight_be.model.loyalty.LoyaltyPoints;
+import io.harman.flight_be.model.loyalty.PurchasedCoupon;
+import io.harman.flight_be.repository.loyalty.CouponRepository;
+import io.harman.flight_be.repository.loyalty.LoyaltyPointsRepository;
+import io.harman.flight_be.repository.loyalty.PurchasedCouponRepository;
 import io.harman.flight_be.service.AirlineService;
 import io.harman.flight_be.service.AirplaneService;
 import io.harman.flight_be.service.BookingService;
@@ -44,6 +50,9 @@ public class DummyDataGenerator {
     private final ClassFlightService classFlightService;
     private final SeatService seatService;
     private final BookingService bookingService;
+    private final CouponRepository couponRepository;
+    private final LoyaltyPointsRepository loyaltyPointsRepository;
+    private final PurchasedCouponRepository purchasedCouponRepository;
 
     public void generate() {
         System.out.println("=".repeat(60));
@@ -318,5 +327,40 @@ public class DummyDataGenerator {
         System.out.println("  - Passengers: 30");
         System.out.println("  - Bookings: " + bookingCount);
         System.out.println("=".repeat(60));
+
+        // Create Coupons
+        List<Coupon> coupons = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            coupons.add(Coupon.builder()
+                    .name(faker.commerce().productName() + " Discount")
+                    .description(faker.lorem().sentence())
+                    .points(faker.number().numberBetween(100, 1000))
+                    .percentOff(faker.number().numberBetween(5, 50))
+                    .build());
+        }
+        couponRepository.saveAll(coupons);
+
+        // Create Loyalty Points for a fixed user
+        UUID customerId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        LoyaltyPoints points = loyaltyPointsRepository.findByCustomerId(customerId)
+                .orElse(LoyaltyPoints.builder().customerId(customerId).points(0).build());
+        points.setPoints(points.getPoints() + 5000);
+        loyaltyPointsRepository.save(points);
+
+        // Create Purchased Coupons
+        List<PurchasedCoupon> purchasedCoupons = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            Coupon coupon = coupons.get(faker.random().nextInt(coupons.size()));
+            purchasedCoupons.add(PurchasedCoupon.builder()
+                    .code(UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                    .customerId(customerId)
+                    .couponId(coupon.getId())
+                    .purchasedDate(LocalDateTime.now().minusDays(faker.number().numberBetween(1, 30)))
+                    .build());
+        }
+        purchasedCouponRepository.saveAll(purchasedCoupons);
+
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("Loyalty Dummy data generation complete!");
     }
 }

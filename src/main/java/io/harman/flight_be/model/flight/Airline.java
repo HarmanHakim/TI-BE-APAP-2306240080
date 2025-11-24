@@ -1,4 +1,4 @@
-package io.harman.flight_be.model;
+package io.harman.flight_be.model.flight;
 
 import java.time.LocalDateTime;
 import java.util.List;

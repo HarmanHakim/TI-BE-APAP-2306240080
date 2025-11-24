@@ -1,4 +1,4 @@
-package io.harman.flight_be.model;
+package io.harman.flight_be.model.flight;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -15,15 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 import io.harman.flight_be.dto.booking.CreateBookingDto;
 import io.harman.flight_be.dto.booking.ReadBookingDto;
 import io.harman.flight_be.dto.booking.UpdateBookingDto;
-import io.harman.flight_be.model.Booking;
-import io.harman.flight_be.model.Flight;
-import io.harman.flight_be.model.Passenger;
-import io.harman.flight_be.model.Seat;
-import io.harman.flight_be.repository.BookingRepository;
-import io.harman.flight_be.repository.ClassFlightRepository;
-import io.harman.flight_be.repository.FlightRepository;
-import io.harman.flight_be.repository.PassengerRepository;
-import io.harman.flight_be.repository.SeatRepository;
+import io.harman.flight_be.model.flight.Booking;
+import io.harman.flight_be.model.flight.Flight;
+import io.harman.flight_be.model.flight.Passenger;
+import io.harman.flight_be.model.flight.Seat;
+import io.harman.flight_be.repository.flight.BookingRepository;
+import io.harman.flight_be.repository.flight.ClassFlightRepository;
+import io.harman.flight_be.repository.flight.FlightRepository;
+import io.harman.flight_be.repository.flight.PassengerRepository;
+import io.harman.flight_be.repository.flight.SeatRepository;
 
 @Service
 @Transactional

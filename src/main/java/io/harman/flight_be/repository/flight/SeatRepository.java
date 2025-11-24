@@ -1,4 +1,4 @@
-package io.harman.flight_be.repository;
+package io.harman.flight_be.repository.flight;
 
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import io.harman.flight_be.model.Seat;
+import io.harman.flight_be.model.flight.Seat;
 
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     

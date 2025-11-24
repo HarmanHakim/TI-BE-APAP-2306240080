@@ -1,9 +1,10 @@
-package io.harman.flight_be.repository;
+package io.harman.flight_be.repository.flight;
 
-import io.harman.flight_be.model.Passenger;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import io.harman.flight_be.model.flight.Passenger;
 
 import java.time.LocalDate;
 import java.util.List;

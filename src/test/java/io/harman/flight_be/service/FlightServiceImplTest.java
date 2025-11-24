@@ -3,15 +3,17 @@ package io.harman.flight_be.service;
 import io.harman.flight_be.dto.flight.CreateFlightDto;
 import io.harman.flight_be.dto.flight.ReadFlightDto;
 import io.harman.flight_be.dto.flight.UpdateFlightDto;
-import io.harman.flight_be.model.Airline;
-import io.harman.flight_be.model.Airplane;
-import io.harman.flight_be.model.ClassFlight;
-import io.harman.flight_be.model.Flight;
+import io.harman.flight_be.model.flight.Airline;
+import io.harman.flight_be.model.flight.Airplane;
+import io.harman.flight_be.model.flight.ClassFlight;
+import io.harman.flight_be.model.flight.Flight;
+import io.harman.flight_be.repository.flight.AirlineRepository;
+import io.harman.flight_be.repository.flight.AirplaneRepository;
+import io.harman.flight_be.repository.flight.BookingRepository;
+import io.harman.flight_be.repository.flight.FlightRepository;
+
 import java.math.BigDecimal;
-import io.harman.flight_be.repository.AirlineRepository;
-import io.harman.flight_be.repository.AirplaneRepository;
-import io.harman.flight_be.repository.BookingRepository;
-import io.harman.flight_be.repository.FlightRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

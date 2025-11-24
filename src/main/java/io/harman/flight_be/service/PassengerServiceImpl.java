@@ -3,8 +3,9 @@ package io.harman.flight_be.service;
 import io.harman.flight_be.dto.passenger.CreatePassengerDto;
 import io.harman.flight_be.dto.passenger.ReadPassengerDto;
 import io.harman.flight_be.dto.passenger.UpdatePassengerDto;
-import io.harman.flight_be.model.Passenger;
-import io.harman.flight_be.repository.PassengerRepository;
+import io.harman.flight_be.model.flight.Passenger;
+import io.harman.flight_be.repository.flight.PassengerRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

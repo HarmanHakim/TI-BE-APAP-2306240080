@@ -3,9 +3,10 @@ package io.harman.flight_be.service;
 import io.harman.flight_be.dto.classflight.CreateClassFlightDto;
 import io.harman.flight_be.dto.classflight.ReadClassFlightDto;
 import io.harman.flight_be.dto.classflight.UpdateClassFlightDto;
-import io.harman.flight_be.model.ClassFlight;
-import io.harman.flight_be.repository.ClassFlightRepository;
-import io.harman.flight_be.repository.FlightRepository;
+import io.harman.flight_be.model.flight.ClassFlight;
+import io.harman.flight_be.repository.flight.ClassFlightRepository;
+import io.harman.flight_be.repository.flight.FlightRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -11,11 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import io.harman.flight_be.dto.flight.CreateFlightDto;
 import io.harman.flight_be.dto.flight.ReadFlightDto;
 import io.harman.flight_be.dto.flight.UpdateFlightDto;
-import io.harman.flight_be.model.Flight;
-import io.harman.flight_be.repository.AirlineRepository;
-import io.harman.flight_be.repository.AirplaneRepository;
-import io.harman.flight_be.repository.BookingRepository;
-import io.harman.flight_be.repository.FlightRepository;
+import io.harman.flight_be.model.flight.Flight;
+import io.harman.flight_be.repository.flight.AirlineRepository;
+import io.harman.flight_be.repository.flight.AirplaneRepository;
+import io.harman.flight_be.repository.flight.BookingRepository;
+import io.harman.flight_be.repository.flight.FlightRepository;
 
 @Service
 @Transactional
@@ -254,7 +254,7 @@ public class FlightServiceImpl implements FlightService {
         }
 
         // Check if there are active bookings (Paid or Rescheduled)
-        List<io.harman.flight_be.model.Booking> activeBookings = bookingRepository
+        List<io.harman.flight_be.model.flight.Booking> activeBookings = bookingRepository
                 .findByFlightIdAndIsDeletedFalse(flightId);
         return activeBookings.stream()
                 .noneMatch(booking -> booking.getStatus() == 2 || booking.getStatus() == 4);

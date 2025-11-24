@@ -3,8 +3,9 @@ package io.harman.flight_be.service;
 import io.harman.flight_be.dto.airline.CreateAirlineDto;
 import io.harman.flight_be.dto.airline.ReadAirlineDto;
 import io.harman.flight_be.dto.airline.UpdateAirlineDto;
-import io.harman.flight_be.model.Airline;
-import io.harman.flight_be.repository.AirlineRepository;
+import io.harman.flight_be.model.flight.Airline;
+import io.harman.flight_be.repository.flight.AirlineRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,4 +1,4 @@
-package io.harman.flight_be.repository;
+package io.harman.flight_be.repository.flight;
 
 import java.util.List;
 import java.util.Optional;
@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import io.harman.flight_be.model.Airline;
+import io.harman.flight_be.model.flight.Airline;
 
 public interface AirlineRepository extends JpaRepository<Airline, String> {
     

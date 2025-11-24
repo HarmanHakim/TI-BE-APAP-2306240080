@@ -1,10 +1,11 @@
 package io.harman.flight_be.service;
 
-import io.harman.flight_be.repository.AirlineRepository;
-import io.harman.flight_be.repository.BookingRepository;
-import io.harman.flight_be.repository.FlightRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import io.harman.flight_be.repository.flight.AirlineRepository;
+import io.harman.flight_be.repository.flight.BookingRepository;
+import io.harman.flight_be.repository.flight.FlightRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

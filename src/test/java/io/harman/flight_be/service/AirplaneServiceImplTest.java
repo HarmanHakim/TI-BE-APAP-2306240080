@@ -27,12 +27,12 @@ import org.springframework.test.context.ActiveProfiles;
 import io.harman.flight_be.dto.airplane.CreateAirplaneDto;
 import io.harman.flight_be.dto.airplane.ReadAirplaneDto;
 import io.harman.flight_be.dto.airplane.UpdateAirplaneDto;
-import io.harman.flight_be.model.Airline;
-import io.harman.flight_be.model.Airplane;
-import io.harman.flight_be.model.Flight;
-import io.harman.flight_be.repository.AirlineRepository;
-import io.harman.flight_be.repository.AirplaneRepository;
-import io.harman.flight_be.repository.FlightRepository;
+import io.harman.flight_be.model.flight.Airline;
+import io.harman.flight_be.model.flight.Airplane;
+import io.harman.flight_be.model.flight.Flight;
+import io.harman.flight_be.repository.flight.AirlineRepository;
+import io.harman.flight_be.repository.flight.AirplaneRepository;
+import io.harman.flight_be.repository.flight.FlightRepository;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

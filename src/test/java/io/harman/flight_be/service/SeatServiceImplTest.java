@@ -27,13 +27,13 @@ import org.springframework.test.context.ActiveProfiles;
 import io.harman.flight_be.dto.seat.CreateSeatDto;
 import io.harman.flight_be.dto.seat.ReadSeatDto;
 import io.harman.flight_be.dto.seat.UpdateSeatDto;
-import io.harman.flight_be.model.ClassFlight;
-import io.harman.flight_be.model.Seat;
-import io.harman.flight_be.model.Passenger;
-import io.harman.flight_be.model.Flight;
-import io.harman.flight_be.repository.ClassFlightRepository;
-import io.harman.flight_be.repository.PassengerRepository;
-import io.harman.flight_be.repository.SeatRepository;
+import io.harman.flight_be.model.flight.ClassFlight;
+import io.harman.flight_be.model.flight.Flight;
+import io.harman.flight_be.model.flight.Passenger;
+import io.harman.flight_be.model.flight.Seat;
+import io.harman.flight_be.repository.flight.ClassFlightRepository;
+import io.harman.flight_be.repository.flight.PassengerRepository;
+import io.harman.flight_be.repository.flight.SeatRepository;
 
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")

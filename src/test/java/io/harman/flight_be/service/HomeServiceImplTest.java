@@ -1,10 +1,11 @@
 package io.harman.flight_be.service;
 
-import io.harman.flight_be.model.Booking;
-import io.harman.flight_be.model.Flight;
-import io.harman.flight_be.repository.AirlineRepository;
-import io.harman.flight_be.repository.BookingRepository;
-import io.harman.flight_be.repository.FlightRepository;
+import io.harman.flight_be.model.flight.Booking;
+import io.harman.flight_be.model.flight.Flight;
+import io.harman.flight_be.repository.flight.AirlineRepository;
+import io.harman.flight_be.repository.flight.BookingRepository;
+import io.harman.flight_be.repository.flight.FlightRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

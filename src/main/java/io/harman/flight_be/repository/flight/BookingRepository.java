@@ -1,4 +1,4 @@
-package io.harman.flight_be.repository;
+package io.harman.flight_be.repository.flight;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import io.harman.flight_be.model.Booking;
+import io.harman.flight_be.model.flight.Booking;
 
 public interface BookingRepository extends JpaRepository<Booking, String> {
     
