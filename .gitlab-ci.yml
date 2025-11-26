@@ -36,7 +36,7 @@ docker-push:
     - docker build -t $DOCKER_IMAGE_NAME_1:$IMAGE_TAG .
     - docker push $DOCKER_IMAGE_NAME_1:$IMAGE_TAG
   only:
-    - feat/praktikum-9
+    - main
 
 deploy:
   stage: deploy
@@ -67,4 +67,4 @@ deploy:
         sudo k3s kubectl rollout status deployment/ti-2306240080 -n default
       "
   only:
-    - feat/praktikum-9
+    - main
