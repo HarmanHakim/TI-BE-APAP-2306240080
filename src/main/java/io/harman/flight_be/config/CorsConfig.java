@@ -21,9 +21,9 @@ public class CorsConfig {
 
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
+                        .allowedHeaders("*", "X-API-KEY")
                         .allowCredentials(true)
-                        .exposedHeaders("Authorization");
+                        .exposedHeaders("Authorization", "X-API-KEY");
             }
         };
     }
