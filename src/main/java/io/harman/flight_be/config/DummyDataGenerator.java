@@ -55,15 +55,26 @@ public class DummyDataGenerator {
     private final PurchasedCouponRepository purchasedCouponRepository;
 
     public void generate() {
-        System.out.println("=".repeat(60));
-        System.out.println("Generating dummy data for Flight Booking System...");
-        System.out.println("=".repeat(60));
+        // ANSI color codes
+        String RESET = "\u001B[0m";
+        String BOLD = "\u001B[1m";
+        String CYAN = "\u001B[36m";
+        String GREEN = "\u001B[32m";
+        String YELLOW = "\u001B[33m";
+        String BLUE = "\u001B[34m";
+        String MAGENTA = "\u001B[35m";
+
+        System.out.println("\n" + CYAN + "╔" + "═".repeat(78) + "╗" + RESET);
+        System.out.println(CYAN + "║" + RESET + BOLD + "  ✈️  Flight Booking System - Dummy Data Generator"
+                + " ".repeat(26) + CYAN + "║" + RESET);
+        System.out.println(CYAN + "╚" + "═".repeat(78) + "╝" + RESET + "\n");
 
         Faker faker = new Faker(Locale.of("id", "ID"));
         Random random = new Random();
 
         // 1. Create Airlines (10)
-        System.out.println("\n[1/7] Creating Airlines...");
+        System.out.println(BOLD + BLUE + "\n┌─ [1/7] Creating Airlines" + RESET);
+        System.out.println(BLUE + "│" + RESET);
         List<String> airlineIds = new ArrayList<>();
         String[] airlineNames = { "Garuda Indonesia", "Lion Air", "Batik Air", "Citilink", "AirAsia",
                 "Sriwijaya Air", "Wings Air", "Nam Air", "Super Air Jet", "TransNusa" };
@@ -79,29 +90,41 @@ public class DummyDataGenerator {
                     .build();
             airlineService.createAirline(airline);
             airlineIds.add(airlineCodes[i]);
+            System.out.println(
+                    BLUE + "│  " + RESET + "➤ " + airlineNames[i] + " (" + airlineCodes[i] + ") - " + countries[i]);
         }
-        System.out.println("✓ Created " + airlineIds.size() + " airlines");
+        System.out.println(BLUE + "│" + RESET);
+        System.out.println(BLUE + "└─" + RESET + GREEN + " ✓ Created " + airlineIds.size() + " airlines" + RESET);
 
         // 2. Create Airplanes (15)
-        System.out.println("\n[2/7] Creating Airplanes...");
+        System.out.println(BOLD + MAGENTA + "\n┌─ [2/7] Creating Airplanes" + RESET);
+        System.out.println(MAGENTA + "│" + RESET);
         List<String> airplaneIds = new ArrayList<>();
         String[] airplaneModels = { "Boeing 737", "Airbus A320", "Boeing 777", "Airbus A330",
                 "Boeing 787", "ATR 72", "Bombardier CRJ1000" };
 
         for (int i = 0; i < 15; i++) {
+            String airlineId = airlineIds.get(random.nextInt(airlineIds.size()));
+            String model = airplaneModels[random.nextInt(airplaneModels.length)];
+            int seatCapacity = 100 + random.nextInt(251);
+            int manufactureYear = 2010 + random.nextInt(15);
             CreateAirplaneDto airplane = CreateAirplaneDto.builder()
-                    .airlineId(airlineIds.get(random.nextInt(airlineIds.size())))
-                    .model(airplaneModels[random.nextInt(airplaneModels.length)])
-                    .seatCapacity(100 + random.nextInt(251)) // 100-350 seats
-                    .manufactureYear(2010 + random.nextInt(15)) // 2010-2024
+                    .airlineId(airlineId)
+                    .model(model)
+                    .seatCapacity(seatCapacity) // 100-350 seats
+                    .manufactureYear(manufactureYear) // 2010-2024
                     .build();
             String id = airplaneService.createAirplane(airplane).getId();
             airplaneIds.add(id);
+            System.out.println(MAGENTA + "│  " + RESET + "➤ " + id + " - " + model + " (" + seatCapacity
+                    + " seats, Year: " + manufactureYear + ")");
         }
-        System.out.println("✓ Created " + airplaneIds.size() + " airplanes");
+        System.out.println(MAGENTA + "│" + RESET);
+        System.out.println(MAGENTA + "└─" + RESET + GREEN + " ✓ Created " + airplaneIds.size() + " airplanes" + RESET);
 
-        // 3. Create Flights (20)
-        System.out.println("\n[3/7] Creating Flights...");
+        // 3. Create Flights (20 departure + 20 return = 40 total)
+        System.out.println(BOLD + YELLOW + "\n┌─ [3/7] Creating Flights (with return flights)" + RESET);
+        System.out.println(YELLOW + "│" + RESET);
         List<String> flightIds = new ArrayList<>();
         String[] airports = { "CGK", "SUB", "DPS", "UPG", "KNO", "BPN", "SOC", "PLM", "PDG", "JOG",
                 "BDO", "PKU", "BTH", "TKG", "SRG", "MDC", "AMQ", "MLG", "SBY", "HLP" };
@@ -122,6 +145,7 @@ public class DummyDataGenerator {
         };
         // Flight status: 1=Scheduled, 2=In Flight, 3=Finished, 4=Delayed, 5=Cancelled
         Integer[] flightStatuses = { 1, 1, 1, 1, 1, 2, 2, 4, 4, 4 }; // Mostly scheduled, some in-flight/delayed
+        String[] statusNames = { "", "Scheduled", "In Flight", "Finished", "Delayed", "Cancelled" };
 
         for (int i = 0; i < 20; i++) {
             try {
@@ -137,11 +161,20 @@ public class DummyDataGenerator {
 
                 LocalDateTime departureTime = LocalDateTime.now().plusDays(random.nextInt(60));
                 LocalDateTime arrivalTime = departureTime.plusHours(1 + random.nextInt(8));
+                long flightDurationHours = java.time.Duration.between(departureTime, arrivalTime).toHours();
 
                 // Generate flight ID: {AirplaneID}-{3-digit sequence}
                 String flightId = selectedAirplaneId + "-" + String.format("%03d", i + 1);
 
-                CreateFlightDto flight = CreateFlightDto.builder()
+                // Store common flight details for reuse
+                String selectedTerminal = terminals[random.nextInt(terminals.length)];
+                String selectedGate = gates[random.nextInt(gates.length)];
+                int selectedBaggage = 20 + random.nextInt(21); // 20-40 kg
+                String selectedFacilities = facilitiesList[random.nextInt(facilitiesList.length)];
+                Integer selectedStatus = flightStatuses[random.nextInt(flightStatuses.length)];
+
+                // Create departure flight
+                CreateFlightDto departureFlight = CreateFlightDto.builder()
                         .id(flightId)
                         .airlineId(airlineId)
                         .airplaneId(selectedAirplaneId)
@@ -149,47 +182,98 @@ public class DummyDataGenerator {
                         .destinationAirportCode(destination)
                         .departureTime(departureTime)
                         .arrivalTime(arrivalTime)
-                        .terminal(terminals[random.nextInt(terminals.length)])
-                        .gate(gates[random.nextInt(gates.length)])
-                        .baggageAllowance(20 + random.nextInt(21)) // 20-40 kg
-                        .facilities(facilitiesList[random.nextInt(facilitiesList.length)])
-                        .status(flightStatuses[random.nextInt(flightStatuses.length)])
+                        .terminal(selectedTerminal)
+                        .gate(selectedGate)
+                        .baggageAllowance(selectedBaggage)
+                        .facilities(selectedFacilities)
+                        .status(selectedStatus)
                         .build();
-                flightService.createFlight(flight);
+                flightService.createFlight(departureFlight);
                 flightIds.add(flightId);
+                System.out.println(YELLOW + "│  " + RESET + "➤ Departure: " + origin + " → " + destination + " ("
+                        + flightId + ") - " + statusNames[selectedStatus]);
+
+                // Create return flight (reversed route) - a few days later
+                String returnFlightId = selectedAirplaneId + "-" + String.format("%03d", 100 + i + 1);
+                LocalDateTime returnDepartureTime = departureTime.plusDays(3 + random.nextInt(4)); // 3-6 days after
+                                                                                                   // departure
+                LocalDateTime returnArrivalTime = returnDepartureTime.plusHours(flightDurationHours); // Same flight
+                                                                                                      // duration
+
+                CreateFlightDto returnFlight = CreateFlightDto.builder()
+                        .id(returnFlightId)
+                        .airlineId(airlineId)
+                        .airplaneId(selectedAirplaneId)
+                        .originAirportCode(destination) // Reversed: destination becomes origin
+                        .destinationAirportCode(origin) // Reversed: origin becomes destination
+                        .departureTime(returnDepartureTime)
+                        .arrivalTime(returnArrivalTime)
+                        .terminal(selectedTerminal)
+                        .gate(selectedGate)
+                        .baggageAllowance(selectedBaggage)
+                        .facilities(selectedFacilities)
+                        .status(selectedStatus)
+                        .build();
+                flightService.createFlight(returnFlight);
+                flightIds.add(returnFlightId);
+                System.out.println(YELLOW + "│  " + RESET + "➤ Return:    " + destination + " → " + origin + " ("
+                        + returnFlightId + ") - " + statusNames[selectedStatus]);
+
             } catch (Exception e) {
                 System.err.println("Warning: Failed to create flight " + i + ": " + e.getMessage());
             }
         }
-        System.out.println("✓ Created " + flightIds.size() + " flights");
+        System.out.println(YELLOW + "│" + RESET);
+        System.out.println(YELLOW + "└─" + RESET + GREEN + " ✓ Created " + flightIds.size() + " flights ("
+                + (flightIds.size() / 2) + " departure + "
+                + (flightIds.size() / 2) + " return)" + RESET);
 
         // 4. Create Class Flights (60 - 3 classes per flight)
-        System.out.println("\n[4/7] Creating Class Flights...");
+        System.out.println(BOLD + CYAN + "\n┌─ [4/7] Creating Class Flights" + RESET);
+        System.out.println(CYAN + "│" + RESET);
         List<Integer> classFlightIds = new ArrayList<>();
         String[] classTypes = { "Economy", "Business", "First Class" };
+        int flightCounter = 0;
 
         for (String flightId : flightIds) {
+            flightCounter++;
+            System.out.println(CYAN + "│  " + RESET + "Flight " + flightId + ":");
             for (int i = 0; i < 3; i++) {
                 try {
                     int capacity = 30 + random.nextInt(71); // 30-100 seats per class
+                    BigDecimal price;
+                    // More realistic pricing for Indonesian market
+                    if (i == 0) { // Economy
+                        price = BigDecimal.valueOf(800000.0 + random.nextDouble() * 700000.0); // 800K - 1.5M
+                    } else if (i == 1) { // Business
+                        price = BigDecimal.valueOf(2000000.0 + random.nextDouble() * 2000000.0); // 2M - 4M
+                    } else { // First Class
+                        price = BigDecimal.valueOf(5000000.0 + random.nextDouble() * 3000000.0); // 5M - 8M
+                    }
                     CreateClassFlightDto classFlight = CreateClassFlightDto.builder()
                             .flightId(flightId)
                             .classType(classTypes[i])
-                            .price(BigDecimal.valueOf(500000.0 + (i * 1000000.0) + random.nextDouble() * 1000000.0))
+                            .price(price)
                             .seatCapacity(capacity)
                             .build();
                     Integer id = classFlightService.createClassFlight(classFlight).getId();
                     classFlightIds.add(id);
+                    System.out.println(CYAN + "│    " + RESET + "  • " + classTypes[i] + ": IDR "
+                            + String.format("%,.0f", price) + " (" + capacity + " seats)");
                 } catch (Exception e) {
                     System.err.println("Warning: Failed to create class flight for " + flightId + " - " + classTypes[i]
                             + ": " + e.getMessage());
                 }
             }
         }
-        System.out.println("✓ Created " + classFlightIds.size() + " class flights");
+        System.out.println(CYAN + "│" + RESET);
+        System.out.println(
+                CYAN + "└─" + RESET + GREEN + " ✓ Created " + classFlightIds.size() + " class flights" + RESET);
 
         // 5. Create Seats (based on class flight seat capacity)
-        System.out.println("\n[5/7] Creating Seats...");
+        System.out.println(BOLD + MAGENTA + "\n┌─ [5/7] Creating Seats" + RESET);
+        System.out.println(MAGENTA + "│  " + RESET + "Generating seats for all class flights...");
+        System.out.println(MAGENTA + "│" + RESET);
         int seatCount = 0;
         Map<Integer, List<String>> classFlightSeatNumbers = new HashMap<>();
 
@@ -217,31 +301,41 @@ public class DummyDataGenerator {
                         "Warning: Failed to create seats for class flight " + classFlightId + ": " + e.getMessage());
             }
         }
-        System.out.println("✓ Created " + seatCount + " seats");
+        System.out.println(MAGENTA + "│" + RESET);
+        System.out.println(MAGENTA + "└─" + RESET + GREEN + " ✓ Created " + seatCount + " seats" + RESET);
 
         // 6. Create Passengers (30)
-        System.out.println("\n[6/7] Creating Passengers...");
+        System.out.println(BOLD + BLUE + "\n┌─ [6/7] Creating Passengers" + RESET);
+        System.out.println(BLUE + "│" + RESET);
         List<UUID> passengerIds = new ArrayList<>();
+        String[] genderNames = { "", "Male", "Female", "Other" };
 
         for (int i = 0; i < 30; i++) {
             com.github.javafaker.Name name = faker.name();
+            int gender = random.nextInt(3) + 1;
+            String idPassport = "ID" + String.format("%010d", random.nextInt(1000000000));
             CreatePassengerDto passenger = CreatePassengerDto.builder()
                     .fullName(name.fullName())
-                    .gender(random.nextInt(3) + 1) // 1=Male, 2=Female, 3=Other
+                    .gender(gender) // 1=Male, 2=Female, 3=Other
                     .birthDate(faker.date().birthday(18, 70).toInstant()
                             .atZone(ZoneId.systemDefault()).toLocalDate())
-                    .idPassport("ID" + String.format("%010d", random.nextInt(1000000000)))
+                    .idPassport(idPassport)
                     .build();
             UUID id = passengerService.createPassenger(passenger).getId();
             passengerIds.add(id);
+            System.out.println(BLUE + "│  " + RESET + "➤ " + name.fullName() + " (" + genderNames[gender] + ", "
+                    + idPassport + ")");
         }
-        System.out.println("✓ Created " + passengerIds.size() + " passengers");
+        System.out.println(BLUE + "│" + RESET);
+        System.out.println(BLUE + "└─" + RESET + GREEN + " ✓ Created " + passengerIds.size() + " passengers" + RESET);
 
         // 7. Create Bookings (15)
-        System.out.println("\n[7/7] Creating Bookings...");
+        System.out.println(BOLD + YELLOW + "\n┌─ [7/7] Creating Bookings" + RESET);
+        System.out.println(YELLOW + "│" + RESET);
         int bookingCount = 0;
         // Booking status: 1=Unpaid, 2=Paid, 3=Cancelled, 4=Rescheduled
         Integer[] bookingStatuses = { 1, 1, 1, 1, 1, 2, 2, 2, 4 }; // Mostly unpaid, some paid, few rescheduled
+        String[] bookingStatusNames = { "", "Unpaid", "Paid", "Cancelled", "Rescheduled" };
 
         for (int i = 0; i < 15; i++) {
             try {
@@ -289,7 +383,8 @@ public class DummyDataGenerator {
                 }
 
                 // Calculate total price
-                BigDecimal classPrice = classFlightService.getClassFlightById(selectedClass).getPrice();
+                var classFlightDto = classFlightService.getClassFlightById(selectedClass);
+                BigDecimal classPrice = classFlightDto.getPrice();
                 BigDecimal totalPrice = classPrice.multiply(BigDecimal.valueOf(numPassengers));
 
                 // Extract origin and destination from flight
@@ -297,6 +392,7 @@ public class DummyDataGenerator {
                 String bookingId = flightId + "-" + flightDto.getOriginAirportCode() + "-"
                         + flightDto.getDestinationAirportCode() + "-" + String.format("%03d", i + 1);
 
+                Integer selectedStatus = bookingStatuses[random.nextInt(bookingStatuses.length)];
                 CreateBookingDto booking = CreateBookingDto.builder()
                         .id(bookingId)
                         .flightId(flightId)
@@ -305,28 +401,43 @@ public class DummyDataGenerator {
                         .contactPhone(faker.phoneNumber().phoneNumber())
                         .passengerCount(numPassengers)
                         .totalPrice(totalPrice)
-                        .status(bookingStatuses[random.nextInt(bookingStatuses.length)])
+                        .status(selectedStatus)
                         .passengerIds(bookingPassengerIds)
                         .build();
 
                 bookingService.createBooking(booking);
                 bookingCount++;
+                System.out.println(YELLOW + "│  " + RESET + "➤ " + bookingId + " - " + classFlightDto.getClassType() +
+                        " (" + numPassengers + " pax, IDR " + String.format("%,.0f", totalPrice) + ") - "
+                        + bookingStatusNames[selectedStatus]);
             } catch (Exception e) {
                 System.err.println("Warning: Failed to create booking " + i + ": " + e.getMessage());
             }
         }
-        System.out.println("✓ Created " + bookingCount + " bookings");
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("Dummy data generation complete!");
-        System.out.println("Summary:");
-        System.out.println("  - Airlines: 10");
-        System.out.println("  - Airplanes: 15");
-        System.out.println("  - Flights: " + flightIds.size());
-        System.out.println("  - Class Flights: " + classFlightIds.size());
-        System.out.println("  - Seats: " + seatCount);
-        System.out.println("  - Passengers: 30");
-        System.out.println("  - Bookings: " + bookingCount);
-        System.out.println("=".repeat(60));
+        System.out.println(YELLOW + "│" + RESET);
+        System.out.println(YELLOW + "└─" + RESET + GREEN + " ✓ Created " + bookingCount + " bookings" + RESET);
+        System.out.println("\n" + CYAN + "╔" + "═".repeat(78) + "╗" + RESET);
+        System.out.println(CYAN + "║" + RESET + BOLD + GREEN + "  ✓ Flight Booking System Data Generation Complete!"
+                + " ".repeat(25) + CYAN + "║" + RESET);
+        System.out.println(CYAN + "╠" + "═".repeat(78) + "╣" + RESET);
+        System.out.println(CYAN + "║" + RESET + BOLD + "  Summary:" + " ".repeat(68) + CYAN + "║" + RESET);
+        System.out.println(
+                CYAN + "║" + RESET + "    • Airlines:      " + String.format("%-56s", "10") + CYAN + "║" + RESET);
+        System.out.println(
+                CYAN + "║" + RESET + "    • Airplanes:     " + String.format("%-56s", "15") + CYAN + "║" + RESET);
+        System.out.println(CYAN
+                + "║" + RESET + "    • Flights:       " + String.format("%-56s", flightIds.size() + " ("
+                        + (flightIds.size() / 2) + " departure + " + (flightIds.size() / 2) + " return)")
+                + CYAN + "║" + RESET);
+        System.out.println(CYAN + "║" + RESET + "    • Class Flights: " + String.format("%-56s", classFlightIds.size())
+                + CYAN + "║" + RESET);
+        System.out.println(
+                CYAN + "║" + RESET + "    • Seats:         " + String.format("%-56s", seatCount) + CYAN + "║" + RESET);
+        System.out.println(
+                CYAN + "║" + RESET + "    • Passengers:    " + String.format("%-56s", "30") + CYAN + "║" + RESET);
+        System.out.println(CYAN + "║" + RESET + "    • Bookings:      " + String.format("%-56s", bookingCount) + CYAN
+                + "║" + RESET);
+        System.out.println(CYAN + "╚" + "═".repeat(78) + "╝" + RESET);
 
         // Create Coupons
         List<Coupon> coupons = new ArrayList<>();
@@ -360,7 +471,16 @@ public class DummyDataGenerator {
         }
         purchasedCouponRepository.saveAll(purchasedCoupons);
 
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("Loyalty Dummy data generation complete!");
+        System.out.println("\n" + MAGENTA + "╔" + "═".repeat(78) + "╗" + RESET);
+        System.out.println(MAGENTA + "║" + RESET + BOLD + GREEN + "  ✓ Loyalty System Data Generation Complete!"
+                + " ".repeat(32) + MAGENTA + "║" + RESET);
+        System.out.println(MAGENTA + "╠" + "═".repeat(78) + "╣" + RESET);
+        System.out.println(MAGENTA + "║" + RESET + "    • Coupons:           " + String.format("%-52s", coupons.size())
+                + MAGENTA + "║" + RESET);
+        System.out.println(MAGENTA + "║" + RESET + "    • Loyalty Points:    "
+                + String.format("%-52s", "5000 pts (Customer: " + customerId + ")") + MAGENTA + "║" + RESET);
+        System.out.println(MAGENTA + "║" + RESET + "    • Purchased Coupons: "
+                + String.format("%-52s", purchasedCoupons.size()) + MAGENTA + "║" + RESET);
+        System.out.println(MAGENTA + "╚" + "═".repeat(78) + "╝" + RESET + "\n");
     }
 }
