@@ -7,6 +7,7 @@ import io.harman.flight_be.model.flight.Booking;
 import io.harman.flight_be.model.flight.ClassFlight;
 import io.harman.flight_be.model.flight.Flight;
 import io.harman.flight_be.model.flight.Passenger;
+import io.harman.flight_be.model.flight.Seat;
 import io.harman.flight_be.repository.flight.BookingRepository;
 import io.harman.flight_be.repository.flight.ClassFlightRepository;
 import io.harman.flight_be.repository.flight.FlightRepository;
@@ -188,12 +189,24 @@ class BookingServiceImplTest {
 
     @Test
     void testCreateBookingSuccess() {
+        // Create a mock seat for assignment
+        Seat mockSeat = Seat.builder()
+                .id(1L)
+                .classFlightId(1)
+                .seatNumber("1A")
+                .isAvailable(true)
+                .build();
+
         when(flightRepository.findByIdAndIsDeletedFalse("FL001")).thenReturn(Optional.of(flight));
         when(classFlightRepository.findById(1)).thenReturn(Optional.of(classFlight));
         when(passengerRepository.findById(passenger1.getId())).thenReturn(Optional.of(passenger1));
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking1);
         when(bookingRepository.findByIdWithPassengers(anyString())).thenReturn(Optional.of(booking1));
-        when(seatRepository.findByClassFlightIdAndIsAvailableTrueOrderBySeatNumberAsc(1)).thenReturn(Arrays.asList());
+        // Mock available seats for assignment
+        when(seatRepository.findByClassFlightIdAndIsAvailableTrueOrderBySeatNumberAsc(1))
+                .thenReturn(Arrays.asList(mockSeat));
+        // Mock successful seat assignment
+        when(seatRepository.assignSeatToPassenger(1L, passenger1.getId())).thenReturn(1);
 
         ReadBookingDto result = bookingService.createBooking(createBookingDto);
 
@@ -202,6 +215,7 @@ class BookingServiceImplTest {
         verify(classFlightRepository).findById(1);
         verify(passengerRepository).findById(passenger1.getId());
         verify(bookingRepository).save(any(Booking.class));
+        verify(seatRepository).assignSeatToPassenger(1L, passenger1.getId());
     }
 
     @Test

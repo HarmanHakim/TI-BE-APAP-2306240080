@@ -120,24 +120,42 @@ public class BookingServiceImpl implements BookingService {
 
         Booking savedBooking = bookingRepository.save(booking);
 
-        // Assign seats to passengers
+        // Assign seats to passengers with retry logic for concurrent bookings
         if (!passengers.isEmpty()) {
-            // Get available seats for the class flight
-            List<Seat> availableSeats = seatRepository.findByClassFlightIdAndIsAvailableTrueOrderBySeatNumberAsc(
-                    createBookingDto.getClassFlightId());
-
-            // Assign seats to each passenger
-            int seatIndex = 0;
             for (Passenger passenger : passengers) {
-                if (seatIndex < availableSeats.size()) {
-                    Seat seat = availableSeats.get(seatIndex);
-                    seatRepository.assignSeatToPassenger(seat.getId(), passenger.getId());
-                    seatIndex++;
-                } else {
-                    // Not enough available seats
-                    System.err.println("Warning: Not enough available seats for all passengers in booking "
-                            + savedBooking.getId());
-                    break;
+                boolean assigned = false;
+                int maxRetries = 5; // Prevent infinite loop in high-concurrency scenarios
+                int attempt = 0;
+
+                while (!assigned && attempt < maxRetries) {
+                    // Fetch fresh available seats each time to handle concurrent bookings
+                    List<Seat> availableSeats = seatRepository
+                            .findByClassFlightIdAndIsAvailableTrueOrderBySeatNumberAsc(
+                                    createBookingDto.getClassFlightId());
+
+                    if (availableSeats.isEmpty()) {
+                        throw new RuntimeException(
+                                "Not enough available seats in class flight " + createBookingDto.getClassFlightId()
+                                        + " for booking " + savedBooking.getId());
+                    }
+
+                    // Try to assign the first available seat using optimistic locking
+                    Seat seat = availableSeats.get(0);
+                    int updated = seatRepository.assignSeatToPassenger(seat.getId(), passenger.getId());
+
+                    if (updated > 0) {
+                        assigned = true;
+                    } else {
+                        // Seat was taken by another transaction between fetch and assignment, retry
+                        attempt++;
+                    }
+                }
+
+                if (!assigned) {
+                    throw new RuntimeException(
+                            "Failed to assign seat to passenger " + passenger.getId()
+                                    + " after " + maxRetries + " attempts. Class flight "
+                                    + createBookingDto.getClassFlightId() + " may be fully booked.");
                 }
             }
         }
@@ -246,7 +264,8 @@ public class BookingServiceImpl implements BookingService {
 
             // Get flight details
             Flight flight = flightRepository.findById(flightId).orElse(null);
-            if (flight == null) continue;
+            if (flight == null)
+                continue;
 
             BigDecimal potentialRevenue = flightBookings.stream()
                     .map(Booking::getTotalPrice)

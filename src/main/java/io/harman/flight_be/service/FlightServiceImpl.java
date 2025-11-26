@@ -39,6 +39,8 @@ public class FlightServiceImpl implements FlightService {
     @Override
     public List<ReadFlightDto> getAllFlights() {
         return flightRepository.findAll().stream()
+                .sorted((a, b) -> b.getDepartureTime().compareTo(a.getDepartureTime())) // Descending order - most
+                                                                                        // recent first
                 .map(this::mapToReadDto)
                 .collect(Collectors.toList());
     }

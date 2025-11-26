@@ -24,9 +24,9 @@ public class AirplaneServiceImpl implements AirplaneService {
     private final AirlineRepository airlineRepository;
     private final FlightRepository flightRepository;
 
-    public AirplaneServiceImpl(AirplaneRepository airplaneRepository, 
-                               AirlineRepository airlineRepository,
-                               FlightRepository flightRepository) {
+    public AirplaneServiceImpl(AirplaneRepository airplaneRepository,
+            AirlineRepository airlineRepository,
+            FlightRepository flightRepository) {
         this.airplaneRepository = airplaneRepository;
         this.airlineRepository = airlineRepository;
         this.flightRepository = flightRepository;
@@ -35,6 +35,12 @@ public class AirplaneServiceImpl implements AirplaneService {
     @Override
     public List<ReadAirplaneDto> getAllAirplanes() {
         return airplaneRepository.findAll().stream()
+                .sorted((a, b) -> {
+                    // Sort by model name first (case-insensitive)
+                    int modelCompare = a.getModel().compareToIgnoreCase(b.getModel());
+                    // If models are equal, sort by ID for stable ordering
+                    return modelCompare != 0 ? modelCompare : a.getId().compareTo(b.getId());
+                })
                 .map(this::mapToReadDto)
                 .collect(Collectors.toList());
     }
@@ -57,7 +63,8 @@ public class AirplaneServiceImpl implements AirplaneService {
     public ReadAirplaneDto createAirplane(CreateAirplaneDto createAirplaneDto) {
         // Validate airline exists
         airlineRepository.findById(createAirplaneDto.getAirlineId())
-                .orElseThrow(() -> new RuntimeException("Airline with ID " + createAirplaneDto.getAirlineId() + " not found"));
+                .orElseThrow(() -> new RuntimeException(
+                        "Airline with ID " + createAirplaneDto.getAirlineId() + " not found"));
 
         // Generate airplane ID
         String airplaneId = generateAirplaneId(createAirplaneDto.getAirlineId());
@@ -78,7 +85,8 @@ public class AirplaneServiceImpl implements AirplaneService {
     @Override
     public ReadAirplaneDto updateAirplane(UpdateAirplaneDto updateAirplaneDto) {
         Airplane airplane = airplaneRepository.findById(updateAirplaneDto.getId())
-                .orElseThrow(() -> new RuntimeException("Airplane with ID " + updateAirplaneDto.getId() + " not found"));
+                .orElseThrow(
+                        () -> new RuntimeException("Airplane with ID " + updateAirplaneDto.getId() + " not found"));
 
         // Check if airplane is active
         if (Boolean.TRUE.equals(airplane.getIsDeleted())) {
@@ -101,13 +109,14 @@ public class AirplaneServiceImpl implements AirplaneService {
 
         // Check if airplane can be deleted
         if (!canDeleteAirplane(id)) {
-            throw new RuntimeException("Cannot delete airplane. It is being used in scheduled, in-flight, or delayed flights");
+            throw new RuntimeException(
+                    "Cannot delete airplane. It is being used in scheduled, in-flight, or delayed flights");
         }
 
         // Soft delete - mark as deleted
         airplane.setIsDeleted(true);
         airplaneRepository.save(airplane);
-        
+
         // Cancel all related flights
         List<Flight> relatedFlights = flightRepository.findByAirplaneIdAndIsDeletedFalse(id);
         for (Flight flight : relatedFlights) {
@@ -134,9 +143,10 @@ public class AirplaneServiceImpl implements AirplaneService {
     }
 
     @Override
-    public List<ReadAirplaneDto> searchAirplanes(String airlineId, String model, Integer manufactureYear, Boolean isDeleted) {
+    public List<ReadAirplaneDto> searchAirplanes(String airlineId, String model, Integer manufactureYear,
+            Boolean isDeleted) {
         List<Airplane> airplanes = airplaneRepository.findAll();
-        
+
         return airplanes.stream()
                 .filter(a -> airlineId == null || a.getAirlineId().equals(airlineId))
                 .filter(a -> model == null || a.getModel().toLowerCase().contains(model.toLowerCase()))
@@ -158,20 +168,21 @@ public class AirplaneServiceImpl implements AirplaneService {
         // Format: {AirlineId}-{3 random letters}
         String randomLetters;
         String airplaneId;
-        
+
         do {
             randomLetters = generateRandomLetters(3);
             airplaneId = airlineId + "-" + randomLetters;
         } while (airplaneRepository.existsById(airplaneId));
-        
+
         return airplaneId;
     }
 
     @Override
     public boolean canDeleteAirplane(String airplaneId) {
-        // Check if airplane is used in flights with status: Scheduled (1), In Flight (2), or Delayed (4)
+        // Check if airplane is used in flights with status: Scheduled (1), In Flight
+        // (2), or Delayed (4)
         List<Flight> activeFlights = flightRepository.findByAirplaneIdAndIsDeletedFalse(airplaneId);
-        
+
         return activeFlights.stream()
                 .noneMatch(flight -> flight.getStatus() == 1 || flight.getStatus() == 2 || flight.getStatus() == 4);
     }
@@ -180,11 +191,11 @@ public class AirplaneServiceImpl implements AirplaneService {
         String letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         Random random = new Random();
         StringBuilder result = new StringBuilder(length);
-        
+
         for (int i = 0; i < length; i++) {
             result.append(letters.charAt(random.nextInt(letters.length())));
         }
-        
+
         return result.toString();
     }
 
