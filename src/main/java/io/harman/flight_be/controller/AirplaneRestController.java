@@ -24,6 +24,8 @@ import io.harman.flight_be.dto.rest.BaseResponseDTO;
 import io.harman.flight_be.service.AirplaneService;
 import jakarta.validation.Valid;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/airplanes")
 public class AirplaneRestController {
@@ -35,6 +37,7 @@ public class AirplaneRestController {
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<ReadAirplaneDto>>> getAllAirplanes(
             @RequestParam(required = false) String airlineId,
             @RequestParam(required = false) String model,
@@ -67,6 +70,7 @@ public class AirplaneRestController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<ReadAirplaneDto>> getAirplaneById(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<ReadAirplaneDto>();
 
@@ -94,6 +98,7 @@ public class AirplaneRestController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadAirplaneDto>> createAirplane(
             @Valid @RequestBody CreateAirplaneDto createAirplaneDto,
             BindingResult bindingResult) {
@@ -138,6 +143,7 @@ public class AirplaneRestController {
     }
 
     @PutMapping("/{id}/update")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadAirplaneDto>> updateAirplane(
             @PathVariable String id,
             @Valid @RequestBody UpdateAirplaneDto updateAirplaneDto,
@@ -184,6 +190,7 @@ public class AirplaneRestController {
     }
 
     @DeleteMapping("/{id}/delete")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<?>> deleteAirplane(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<>();
 
@@ -210,6 +217,7 @@ public class AirplaneRestController {
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<?>> activateAirplane(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<>();
 

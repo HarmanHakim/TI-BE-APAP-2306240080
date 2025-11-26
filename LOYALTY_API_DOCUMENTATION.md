@@ -37,7 +37,7 @@ If not set, it defaults to `default-loyalty-api-key-change-me` (configured in `a
 #### Add Loyalty Points
 
 ```bash
-curl -X POST http://localhost:8080/api/loyalty/points \
+curl -X POST http://2306240080-be.hafizmuh.site/api/loyalty/points \
   -H "Content-Type: application/json" \
   -H "X-API-KEY: your-secret-api-key" \
   -d '{
@@ -81,7 +81,7 @@ curl -X POST http://localhost:8080/api/loyalty/points \
 #### Redeem Coupon
 
 ```bash
-curl -X POST http://localhost:8080/api/loyalty/coupons/redeem \
+curl -X POST http://2306240080-be.hafizmuh.site/api/loyalty/coupons/redeem \
   -H "Content-Type: application/json" \
   -H "X-API-KEY: your-secret-api-key" \
   -d '{

@@ -27,6 +27,8 @@ import io.harman.flight_be.dto.rest.BaseResponseDTO;
 import io.harman.flight_be.service.BookingService;
 import jakarta.validation.Valid;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/bookings")
 public class BookingRestController {
@@ -38,6 +40,7 @@ public class BookingRestController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<List<ReadBookingDto>>> getAllBookings(
             @RequestParam(required = false) Boolean isActive,
             @RequestParam(required = false) Integer status,
@@ -73,6 +76,7 @@ public class BookingRestController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadBookingDto>> getBookingById(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<ReadBookingDto>();
 
@@ -100,6 +104,7 @@ public class BookingRestController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadBookingDto>> createBooking(
             @Valid @RequestBody CreateBookingDto createBookingDto,
             BindingResult bindingResult) {
@@ -144,6 +149,7 @@ public class BookingRestController {
     }
 
     @PutMapping("/{id}/update")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadBookingDto>> updateBooking(
             @PathVariable String id,
             @Valid @RequestBody UpdateBookingDto updateBookingDto,
@@ -190,6 +196,7 @@ public class BookingRestController {
     }
 
     @DeleteMapping("/{id}/delete")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<?>> cancelBooking(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<>();
 
@@ -216,6 +223,7 @@ public class BookingRestController {
     }
 
     @GetMapping("/statistics")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<Map<String, Object>>> getBookingStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {

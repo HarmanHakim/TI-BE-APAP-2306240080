@@ -27,151 +27,233 @@ import io.harman.flight_be.dto.rest.BaseResponseDTO;
 import io.harman.flight_be.service.CouponService;
 import io.harman.flight_be.service.LoyaltyService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/loyalty")
-@RequiredArgsConstructor
 public class LoyaltyRestController {
 
     private final LoyaltyService loyaltyService;
     private final CouponService couponService;
 
-    @GetMapping("/coupons/available")
+    public LoyaltyRestController(LoyaltyService loyaltyService, CouponService couponService) {
+        this.loyaltyService = loyaltyService;
+        this.couponService = couponService;
+    }
+
+    @GetMapping("/coupons")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<List<CouponResponseDTO>>> getAvailableCoupons() {
-        var baseResponse = new BaseResponseDTO<List<CouponResponseDTO>>();
-        baseResponse.setStatus(HttpStatus.OK.value());
-        baseResponse.setData(couponService.getCoupons());
-        baseResponse.setMessage("Available coupons retrieved successfully");
-        baseResponse.setTimestamp(new Date());
-        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+        var baseResponseDTO = new BaseResponseDTO<List<CouponResponseDTO>>();
+
+        try {
+            List<CouponResponseDTO> coupons = couponService.getCoupons();
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(coupons);
+            baseResponseDTO.setMessage("Available coupons retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve coupons: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/points")
-        public ResponseEntity<BaseResponseDTO<LoyaltyPointsResponseDTO>> addPoints(
+    public ResponseEntity<BaseResponseDTO<LoyaltyPointsResponseDTO>> addPoints(
             @Valid @RequestBody AddPointsRequestDTO request,
             BindingResult bindingResult) {
-        var baseResponse = new BaseResponseDTO<LoyaltyPointsResponseDTO>();
 
-        if (bindingResult.hasErrors()) {
-            baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-            baseResponse.setMessage(buildValidationMessage(bindingResult));
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.BAD_REQUEST);
+        var baseResponseDTO = new BaseResponseDTO<LoyaltyPointsResponseDTO>();
+
+        if (bindingResult.hasFieldErrors()) {
+            StringBuilder errorMessages = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            for (FieldError error : errors) {
+                errorMessages.append(error.getDefaultMessage()).append("; ");
+            }
+
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(errorMessages.toString());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
         }
 
-        LoyaltyPointsResponseDTO responseDTO = loyaltyService.addPoints(request);
-        baseResponse.setStatus(HttpStatus.OK.value());
-        baseResponse.setData(responseDTO);
-        baseResponse.setMessage("Points added successfully");
-        baseResponse.setTimestamp(new Date());
-        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+        try {
+            LoyaltyPointsResponseDTO response = loyaltyService.addPoints(request);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(response);
+            baseResponseDTO.setMessage("Points added successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to add points: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @GetMapping("/customers/{customerId}/balance")
-    public ResponseEntity<BaseResponseDTO<LoyaltyPointsResponseDTO>> getBalance(@PathVariable UUID customerId) {
-        var baseResponse = new BaseResponseDTO<LoyaltyPointsResponseDTO>();
-        LoyaltyPointsResponseDTO responseDTO = loyaltyService.getBalance(customerId);
-        baseResponse.setStatus(HttpStatus.OK.value());
-        baseResponse.setData(responseDTO);
-        baseResponse.setMessage("Balance retrieved successfully");
-        baseResponse.setTimestamp(new Date());
-        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+    @GetMapping("/balance/{userId}")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    public ResponseEntity<BaseResponseDTO<LoyaltyPointsResponseDTO>> getBalance(@PathVariable UUID userId) {
+        var baseResponseDTO = new BaseResponseDTO<LoyaltyPointsResponseDTO>();
+
+        try {
+            LoyaltyPointsResponseDTO balance = loyaltyService.getBalance(userId);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(balance);
+            baseResponseDTO.setMessage("Balance retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve balance: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    @GetMapping("/customers/{customerId}/dashboard")
-    public ResponseEntity<BaseResponseDTO<LoyaltyDashboardResponseDTO>> getDashboard(@PathVariable UUID customerId) {
-        var baseResponse = new BaseResponseDTO<LoyaltyDashboardResponseDTO>();
-        LoyaltyDashboardResponseDTO responseDTO = loyaltyService.getDashboard(customerId);
-        baseResponse.setStatus(HttpStatus.OK.value());
-        baseResponse.setData(responseDTO);
-        baseResponse.setMessage("Dashboard retrieved successfully");
-        baseResponse.setTimestamp(new Date());
-        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+    @GetMapping("/dashboard/{userId}")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    public ResponseEntity<BaseResponseDTO<LoyaltyDashboardResponseDTO>> getDashboard(@PathVariable UUID userId) {
+        var baseResponseDTO = new BaseResponseDTO<LoyaltyDashboardResponseDTO>();
+
+        try {
+            LoyaltyDashboardResponseDTO dashboard = loyaltyService.getDashboard(userId);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(dashboard);
+            baseResponseDTO.setMessage("Dashboard retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve dashboard: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/coupons/purchase")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<PurchasedCouponResponseDTO>> purchaseCoupon(
             @Valid @RequestBody PurchaseCouponRequestDTO request,
             BindingResult bindingResult) {
-        var baseResponse = new BaseResponseDTO<PurchasedCouponResponseDTO>();
 
-        if (bindingResult.hasErrors()) {
-            baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-            baseResponse.setMessage(buildValidationMessage(bindingResult));
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.BAD_REQUEST);
+        var baseResponseDTO = new BaseResponseDTO<PurchasedCouponResponseDTO>();
+
+        if (bindingResult.hasFieldErrors()) {
+            StringBuilder errorMessages = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            for (FieldError error : errors) {
+                errorMessages.append(error.getDefaultMessage()).append("; ");
+            }
+
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(errorMessages.toString());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
         }
 
         try {
-            PurchasedCouponResponseDTO responseDTO = loyaltyService.purchaseCoupon(request);
-            baseResponse.setStatus(HttpStatus.CREATED.value());
-            baseResponse.setData(responseDTO);
-            baseResponse.setMessage("Coupon purchased successfully");
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.CREATED);
+            PurchasedCouponResponseDTO response = loyaltyService.purchaseCoupon(request);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(response);
+            baseResponseDTO.setMessage("Coupon purchased successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
         } catch (IllegalArgumentException e) {
-            baseResponse.setStatus(HttpStatus.NOT_FOUND.value());
-            baseResponse.setMessage(e.getMessage());
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.NOT_FOUND);
-        } catch (IllegalStateException e) {
-            baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-            baseResponse.setMessage(e.getMessage());
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.BAD_REQUEST);
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to purchase coupon: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping("/customers/{customerId}/purchased-coupons")
+    @GetMapping("/coupons/purchased/{userId}")
+    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<List<PurchasedCouponResponseDTO>>> getPurchasedCoupons(
-            @PathVariable UUID customerId) {
-        var baseResponse = new BaseResponseDTO<List<PurchasedCouponResponseDTO>>();
-        baseResponse.setStatus(HttpStatus.OK.value());
-        baseResponse.setData(loyaltyService.getPurchasedCoupons(customerId));
-        baseResponse.setMessage("Purchased coupons retrieved successfully");
-        baseResponse.setTimestamp(new Date());
-        return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+            @PathVariable UUID userId) {
+        var baseResponseDTO = new BaseResponseDTO<List<PurchasedCouponResponseDTO>>();
+
+        try {
+            List<PurchasedCouponResponseDTO> coupons = loyaltyService.getPurchasedCoupons(userId);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(coupons);
+            baseResponseDTO.setMessage("Purchased coupons retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve purchased coupons: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/coupons/redeem")
-        public ResponseEntity<BaseResponseDTO<RedeemCouponResponseDTO>> redeemCoupon(
+    public ResponseEntity<BaseResponseDTO<RedeemCouponResponseDTO>> redeemCoupon(
             @Valid @RequestBody RedeemCouponRequestDTO request,
             BindingResult bindingResult) {
-        var baseResponse = new BaseResponseDTO<RedeemCouponResponseDTO>();
 
-        if (bindingResult.hasErrors()) {
-            baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-            baseResponse.setMessage(buildValidationMessage(bindingResult));
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.BAD_REQUEST);
+        var baseResponseDTO = new BaseResponseDTO<RedeemCouponResponseDTO>();
+
+        if (bindingResult.hasFieldErrors()) {
+            StringBuilder errorMessages = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+
+            for (FieldError error : errors) {
+                errorMessages.append(error.getDefaultMessage()).append("; ");
+            }
+
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(errorMessages.toString());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
         }
 
         try {
-            RedeemCouponResponseDTO responseDTO = loyaltyService.redeemCoupon(request);
-            baseResponse.setStatus(HttpStatus.OK.value());
-            baseResponse.setData(responseDTO);
-            baseResponse.setMessage("Coupon redeemed successfully");
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.OK);
+            RedeemCouponResponseDTO response = loyaltyService.redeemCoupon(request);
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(response);
+            baseResponseDTO.setMessage("Coupon redeemed successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
         } catch (IllegalArgumentException e) {
-            baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-            baseResponse.setMessage(e.getMessage());
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.BAD_REQUEST);
-        } catch (IllegalStateException e) {
-            baseResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-            baseResponse.setMessage(e.getMessage());
-            baseResponse.setTimestamp(new Date());
-            return new ResponseEntity<>(baseResponse, HttpStatus.BAD_REQUEST);
+            baseResponseDTO.setStatus(HttpStatus.BAD_REQUEST.value());
+            baseResponseDTO.setMessage(e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to redeem coupon: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    private String buildValidationMessage(BindingResult bindingResult) {
-        StringBuilder builder = new StringBuilder();
-        for (FieldError error : bindingResult.getFieldErrors()) {
-            builder.append(error.getDefaultMessage()).append("; ");
-        }
-        return builder.toString();
-    }
 }

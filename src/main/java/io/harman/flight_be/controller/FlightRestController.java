@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getAllFlights(
             @RequestParam(required = false) String origin,
             @RequestParam(required = false) String destination,
@@ -70,6 +72,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<ReadFlightDto>> getFlightById(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<ReadFlightDto>();
 
@@ -97,6 +100,7 @@ public class FlightRestController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadFlightDto>> createFlight(
             @Valid @RequestBody CreateFlightDto createFlightDto,
             BindingResult bindingResult) {
@@ -141,6 +145,7 @@ public class FlightRestController {
     }
 
     @PutMapping("/{id}/update")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadFlightDto>> updateFlight(
             @PathVariable String id,
             @Valid @RequestBody UpdateFlightDto updateFlightDto,
@@ -187,6 +192,7 @@ public class FlightRestController {
     }
 
     @DeleteMapping("/{id}/delete")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<?>> cancelFlight(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<>();
 
@@ -213,6 +219,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/upcoming")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getUpcomingFlights() {
         var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
 
@@ -234,6 +241,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/today")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getFlightsDepartingToday() {
         var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
 
@@ -255,6 +263,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/available")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getFlightsWithAvailableSeats() {
         var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
 

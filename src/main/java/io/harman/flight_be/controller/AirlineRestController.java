@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/airlines")
 public class AirlineRestController {
@@ -24,14 +26,15 @@ public class AirlineRestController {
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<ReadAirlineDto>>> getAllAirlines(
             @RequestParam(required = false) String country) {
-        
+
         var baseResponseDTO = new BaseResponseDTO<List<ReadAirlineDto>>();
 
         try {
             List<ReadAirlineDto> airlines;
-            
+
             if (country != null) {
                 airlines = airlineService.getAirlinesByCountry(country);
             } else {
@@ -53,6 +56,7 @@ public class AirlineRestController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<ReadAirlineDto>> getAirlineById(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<ReadAirlineDto>();
 
@@ -80,6 +84,7 @@ public class AirlineRestController {
     }
 
     @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadAirlineDto>> createAirline(
             @Valid @RequestBody CreateAirlineDto createAirlineDto,
             BindingResult bindingResult) {
@@ -124,6 +129,7 @@ public class AirlineRestController {
     }
 
     @PutMapping("/{id}/update")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<ReadAirlineDto>> updateAirline(
             @PathVariable String id,
             @Valid @RequestBody UpdateAirlineDto updateAirlineDto,
@@ -170,6 +176,7 @@ public class AirlineRestController {
     }
 
     @DeleteMapping("/{id}/delete")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
     public ResponseEntity<BaseResponseDTO<?>> deleteAirline(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<>();
 
@@ -196,9 +203,10 @@ public class AirlineRestController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<ReadAirlineDto>>> searchAirlines(
             @RequestParam String name) {
-        
+
         var baseResponseDTO = new BaseResponseDTO<List<ReadAirlineDto>>();
 
         try {
@@ -219,6 +227,7 @@ public class AirlineRestController {
     }
 
     @GetMapping("/countries")
+    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
     public ResponseEntity<BaseResponseDTO<List<String>>> getDistinctCountries() {
         var baseResponseDTO = new BaseResponseDTO<List<String>>();
 
