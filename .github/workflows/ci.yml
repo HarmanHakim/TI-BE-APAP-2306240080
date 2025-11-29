@@ -85,15 +85,18 @@ jobs:
 
       - name: Generate ConfigMap
         run: |
-          printf "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: ti-2306240080-config\n  namespace: default\ndata:\n  DATABASE_URL_PROD: \"%s\"\n  DATABASE_USERNAME: \"%s\"\n" \
+          printf "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: ti-2306240080-config\n  namespace: default\ndata:\n  DATABASE_URL_PROD: \"%s\"\n  DATABASE_USERNAME: \"%s\"\n  JWT_SECRET_KEY: \"%s\"\n  LOYALTY_API_KEY: \"%s\"\n" \
           "${{ secrets.DATABASE_URL_PROD }}" \
-          "${{ secrets.DATABASE_USERNAME }}" > configmap.yaml
+          "${{ secrets.DATABASE_USERNAME }}" \
+          "${{ secrets.JWT_SECRET_KEY }}" \
+          "${{ secrets.LOYALTY_API_KEY}}" > configmap.yaml
 
       - name: Generate Secret
         run: |
           printf "apiVersion: v1\nkind: Secret\nmetadata:\n  name: ti-2306240080-secret\n  namespace: default\ntype: Opaque\nstringData:\n  DATABASE_PASSWORD: \"%s\"\n  JWT_SECRET_KEY: \"%s\"\n" \
           "${{ secrets.DATABASE_PASSWORD }}" \
-          "${{ secrets.JWT_SECRET_KEY }}" > secret.yaml
+          "${{ secrets.JWT_SECRET_KEY }}" \ 
+          "${{ secrets.LOYALTY_API_KEY }}" > secret.yaml
 
       - name: Replace image tag in deployment
         run: sed "s|REPLACE_ME_TAG|$IMAGE_TAG|g" k8s/deployment.yaml > deployment.yaml
