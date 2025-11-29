@@ -369,4 +369,87 @@ public class FlightServiceImpl implements FlightService {
                 return "Unknown";
         }
     }
+
+    @Override
+    public List<io.harman.flight_be.dto.flight.FlightReminderDto> getFlightReminders(Integer intervalHours,
+            String customerId) {
+        // Validate and default interval to 3 hours if invalid
+        if (intervalHours == null || intervalHours < 0) {
+            intervalHours = 3;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endTime = now.plusHours(intervalHours);
+
+        // Find flights departing within the time window
+        List<Flight> flights = flightRepository.findFlightsDepartingBetween(now, endTime);
+
+        // If customerId is provided, filter flights to only those with bookings by this
+        // customer
+        if (customerId != null && !customerId.isBlank()) {
+            flights = flights.stream()
+                    .filter(flight -> {
+                        // Check if customer has any Paid bookings for this flight
+                        return bookingRepository.findByFlightIdAndIsDeletedFalse(flight.getId()).stream()
+                                .anyMatch(booking -> booking.getStatus() == 2 && // Paid status
+                                        booking.getPassengers().stream()
+                                                .anyMatch(
+                                                        passenger -> customerId.equals(passenger.getId().toString())));
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Map to FlightReminderDto
+        return flights.stream()
+                .map(flight -> {
+                    // Calculate remaining time
+                    long remainingMinutes = java.time.Duration.between(now, flight.getDepartureTime()).toMinutes();
+                    String remainingTime = formatRemainingTime(remainingMinutes);
+
+                    // Count bookings by status
+                    List<io.harman.flight_be.model.flight.Booking> bookings = bookingRepository
+                            .findByFlightIdAndIsDeletedFalse(flight.getId());
+
+                    long paidBookings = bookings.stream()
+                            .filter(b -> b.getStatus() == 2) // Paid
+                            .count();
+
+                    long unpaidBookings = bookings.stream()
+                            .filter(b -> b.getStatus() == 1) // Unpaid
+                            .count();
+
+                    // Get airline name
+                    String airlineName = flight.getAirline() != null ? flight.getAirline().getName() : "Unknown";
+
+                    return io.harman.flight_be.dto.flight.FlightReminderDto.builder()
+                            .flightNumber(flight.getId())
+                            .airline(airlineName)
+                            .origin(flight.getOriginAirportCode())
+                            .destination(flight.getDestinationAirportCode())
+                            .departureTime(flight.getDepartureTime())
+                            .remainingMinutes(remainingMinutes)
+                            .remainingTime(remainingTime)
+                            .status(flight.getStatus())
+                            .statusLabel(getStatusLabel(flight.getStatus()))
+                            .totalPaidBookings(paidBookings)
+                            .totalUnpaidBookings(unpaidBookings)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String formatRemainingTime(long minutes) {
+        if (minutes < 0) {
+            return "Departed";
+        }
+
+        long hours = minutes / 60;
+        long mins = minutes % 60;
+
+        if (hours > 0) {
+            return String.format("%dh %dm", hours, mins);
+        } else {
+            return String.format("%dm", mins);
+        }
+    }
 }

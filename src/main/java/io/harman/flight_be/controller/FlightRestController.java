@@ -283,4 +283,38 @@ public class FlightRestController {
             return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/reminder")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN', 'CUSTOMER')")
+    public ResponseEntity<BaseResponseDTO<List<io.harman.flight_be.dto.flight.FlightReminderDto>>> getFlightReminders(
+            @RequestParam(required = false) Integer interval,
+            @RequestParam(required = false) String customerId) {
+
+        var baseResponseDTO = new BaseResponseDTO<List<io.harman.flight_be.dto.flight.FlightReminderDto>>();
+
+        try {
+            List<io.harman.flight_be.dto.flight.FlightReminderDto> reminders = flightService
+                    .getFlightReminders(interval, customerId);
+
+            if (reminders.isEmpty()) {
+                baseResponseDTO.setStatus(HttpStatus.OK.value());
+                baseResponseDTO.setData(reminders);
+                baseResponseDTO.setMessage("No upcoming flights found.");
+                baseResponseDTO.setTimestamp(new Date());
+                return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+            }
+
+            baseResponseDTO.setStatus(HttpStatus.OK.value());
+            baseResponseDTO.setData(reminders);
+            baseResponseDTO.setMessage("Flight reminders retrieved successfully");
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.OK);
+
+        } catch (Exception e) {
+            baseResponseDTO.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            baseResponseDTO.setMessage("Failed to retrieve flight reminders: " + e.getMessage());
+            baseResponseDTO.setTimestamp(new Date());
+            return new ResponseEntity<>(baseResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
