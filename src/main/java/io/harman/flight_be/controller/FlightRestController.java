@@ -38,7 +38,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN', 'CUSTOMER')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getAllFlights(
             @RequestParam(required = false) String origin,
             @RequestParam(required = false) String destination,
@@ -72,7 +72,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN', 'CUSTOMER')")
     public ResponseEntity<BaseResponseDTO<ReadFlightDto>> getFlightById(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<ReadFlightDto>();
 
@@ -100,7 +100,7 @@ public class FlightRestController {
     }
 
     @PostMapping("/create")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<ReadFlightDto>> createFlight(
             @Valid @RequestBody CreateFlightDto createFlightDto,
             BindingResult bindingResult) {
@@ -145,7 +145,7 @@ public class FlightRestController {
     }
 
     @PutMapping("/{id}/update")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<ReadFlightDto>> updateFlight(
             @PathVariable String id,
             @Valid @RequestBody UpdateFlightDto updateFlightDto,
@@ -192,7 +192,7 @@ public class FlightRestController {
     }
 
     @DeleteMapping("/{id}/delete")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<?>> cancelFlight(@PathVariable String id) {
         var baseResponseDTO = new BaseResponseDTO<>();
 
@@ -219,7 +219,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/upcoming")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN', 'CUSTOMER')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getUpcomingFlights() {
         var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
 
@@ -241,7 +241,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/today")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN', 'CUSTOMER')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getFlightsDepartingToday() {
         var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
 
@@ -263,7 +263,7 @@ public class FlightRestController {
     }
 
     @GetMapping("/available")
-    @PreAuthorize("hasAnyAuthority('Flight Airline', 'Superadmin', 'Customer')")
+    @PreAuthorize("hasAnyAuthority('FLIGHT_AIRLINE', 'SUPERADMIN', 'CUSTOMER')")
     public ResponseEntity<BaseResponseDTO<List<ReadFlightDto>>> getFlightsWithAvailableSeats() {
         var baseResponseDTO = new BaseResponseDTO<List<ReadFlightDto>>();
 

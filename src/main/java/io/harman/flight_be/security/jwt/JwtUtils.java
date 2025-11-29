@@ -25,7 +25,10 @@ public class JwtUtils {
     private int jwtExpirationMs;
 
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        // Match profile-service-be's approach: encode then decode (effectively just
+        // converts string to bytes)
+        return Keys
+                .hmacShaKeyFor(Decoders.BASE64.decode(io.jsonwebtoken.io.Encoders.BASE64.encode(jwtSecret.getBytes())));
     }
 
     public String getUserNameFromJwtToken(String token) {

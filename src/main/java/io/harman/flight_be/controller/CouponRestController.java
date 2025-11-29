@@ -35,7 +35,7 @@ public class CouponRestController {
     private final CouponService couponService;
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<List<CouponResponseDTO>>> getCoupons() {
         var baseResponse = new BaseResponseDTO<List<CouponResponseDTO>>();
 
@@ -48,7 +48,7 @@ public class CouponRestController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<CouponResponseDTO>> getCoupon(@PathVariable UUID id) {
         var baseResponse = new BaseResponseDTO<CouponResponseDTO>();
         try {
@@ -67,7 +67,7 @@ public class CouponRestController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyAuthority('Superadmin')")
+    @PreAuthorize("hasAnyAuthority('SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<CouponResponseDTO>> createCoupon(
             @Valid @RequestBody CreateCouponRequestDTO request,
             BindingResult bindingResult) {
@@ -89,7 +89,7 @@ public class CouponRestController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('Superadmin')")
+    @PreAuthorize("hasAnyAuthority('SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<CouponResponseDTO>> updateCoupon(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateCouponRequestDTO request,
@@ -119,7 +119,7 @@ public class CouponRestController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('Superadmin')")
+    @PreAuthorize("hasAnyAuthority('SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<Void>> deleteCoupon(@PathVariable UUID id) {
         var baseResponse = new BaseResponseDTO<Void>();
         try {

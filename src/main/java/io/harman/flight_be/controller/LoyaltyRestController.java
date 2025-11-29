@@ -43,7 +43,7 @@ public class LoyaltyRestController {
     }
 
     @GetMapping("/coupons")
-    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<List<CouponResponseDTO>>> getAvailableCoupons() {
         var baseResponseDTO = new BaseResponseDTO<List<CouponResponseDTO>>();
 
@@ -103,7 +103,7 @@ public class LoyaltyRestController {
     }
 
     @GetMapping("/balance/{userId}")
-    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<LoyaltyPointsResponseDTO>> getBalance(@PathVariable UUID userId) {
         var baseResponseDTO = new BaseResponseDTO<LoyaltyPointsResponseDTO>();
 
@@ -125,7 +125,7 @@ public class LoyaltyRestController {
     }
 
     @GetMapping("/dashboard/{userId}")
-    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<LoyaltyDashboardResponseDTO>> getDashboard(@PathVariable UUID userId) {
         var baseResponseDTO = new BaseResponseDTO<LoyaltyDashboardResponseDTO>();
 
@@ -147,7 +147,7 @@ public class LoyaltyRestController {
     }
 
     @PostMapping("/coupons/purchase")
-    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<PurchasedCouponResponseDTO>> purchaseCoupon(
             @Valid @RequestBody PurchaseCouponRequestDTO request,
             BindingResult bindingResult) {
@@ -191,7 +191,7 @@ public class LoyaltyRestController {
     }
 
     @GetMapping("/coupons/purchased/{userId}")
-    @PreAuthorize("hasAnyAuthority('Customer', 'Superadmin')")
+    @PreAuthorize("hasAnyAuthority('CUSTOMER', 'SUPERADMIN')")
     public ResponseEntity<BaseResponseDTO<List<PurchasedCouponResponseDTO>>> getPurchasedCoupons(
             @PathVariable UUID userId) {
         var baseResponseDTO = new BaseResponseDTO<List<PurchasedCouponResponseDTO>>();
