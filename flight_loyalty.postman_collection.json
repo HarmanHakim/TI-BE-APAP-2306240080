@@ -95,6 +95,24 @@
               ]
             }
           }
+        },
+        {
+          "name": "Delete Coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/coupons/{{couponId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "coupons",
+                "{{couponId}}"
+              ]
+            }
+          }
         }
       ]
     },
@@ -107,15 +125,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/loyalty/coupons/available",
+              "raw": "{{baseUrl}}/api/loyalty/coupons",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "loyalty",
-                "coupons",
-                "available"
+                "coupons"
               ]
             }
           }
@@ -153,16 +170,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/loyalty/customers/{{customerId}}/balance",
+              "raw": "{{baseUrl}}/api/loyalty/balance/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "loyalty",
-                "customers",
-                "{{customerId}}",
-                "balance"
+                "balance",
+                "{{userId}}"
               ]
             }
           }
@@ -173,16 +189,15 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/loyalty/customers/{{customerId}}/dashboard",
+              "raw": "{{baseUrl}}/api/loyalty/dashboard/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "loyalty",
-                "customers",
-                "{{customerId}}",
-                "dashboard"
+                "dashboard",
+                "{{userId}}"
               ]
             }
           }
@@ -221,16 +236,16 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/loyalty/customers/{{customerId}}/purchased-coupons",
+              "raw": "{{baseUrl}}/api/loyalty/coupons/purchased/{{userId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "loyalty",
-                "customers",
-                "{{customerId}}",
-                "purchased-coupons"
+                "coupons",
+                "purchased",
+                "{{userId}}"
               ]
             }
           }
@@ -428,6 +443,34 @@
                 "api",
                 "flights",
                 "available"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Flight Reminders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/flights/reminder?interval=60&customerId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "flights",
+                "reminder"
+              ],
+              "query": [
+                {
+                  "key": "interval",
+                  "value": "60"
+                },
+                {
+                  "key": "customerId",
+                  "value": "{{userId}}"
+                }
               ]
             }
           }
@@ -830,6 +873,53 @@
               ]
             }
           }
+        },
+        {
+          "name": "Update Seat",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{seatId}},\n  \"classFlightId\": 1,\n  \"seatNumber\": \"12B\",\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/seats/{{seatId}}/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "seats",
+                "{{seatId}}",
+                "update"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Seat",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/seats/{{seatId}}/delete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "seats",
+                "{{seatId}}",
+                "delete"
+              ]
+            }
+          }
         }
       ]
     },
@@ -947,6 +1037,25 @@
           }
         },
         {
+          "name": "Activate Airplane",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/airplanes/{{airplaneId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "airplanes",
+                "{{airplaneId}}",
+                "activate"
+              ]
+            }
+          }
+        },
+        {
           "name": "List Airlines",
           "request": {
             "method": "GET",
@@ -960,6 +1069,24 @@
                 "api",
                 "airlines",
                 "all"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Airline",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/airlines/{{airlineId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "airlines",
+                "{{airlineId}}"
               ]
             }
           }
@@ -990,6 +1117,95 @@
               ]
             }
           }
+        },
+        {
+          "name": "Update Airline",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Airlines\",\n  \"country\": \"United States\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/airlines/{{airlineId}}/update",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "airlines",
+                "{{airlineId}}",
+                "update"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Airline",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/airlines/{{airlineId}}/delete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "airlines",
+                "{{airlineId}}",
+                "delete"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Airlines",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/airlines/search?name=Acme",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "airlines",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Acme"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Distinct Countries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/airlines/countries",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "airlines",
+                "countries"
+              ]
+            }
+          }
         }
       ]
     },
@@ -1010,6 +1226,48 @@
                 "api",
                 "class-flights",
                 "all"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Class Flight",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/class-flights/{{classFlightId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "class-flights",
+                "{{classFlightId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Available Class Flights",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/class-flights/available?flightId={{flightId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "class-flights",
+                "available"
+              ],
+              "query": [
+                {
+                  "key": "flightId",
+                  "value": "{{flightId}}"
+                }
               ]
             }
           }
@@ -1068,6 +1326,25 @@
               ]
             }
           }
+        },
+        {
+          "name": "Delete Class Flight",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/class-flights/{{classFlightId}}/delete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "class-flights",
+                "{{classFlightId}}",
+                "delete"
+              ]
+            }
+          }
         }
       ]
     },
@@ -1080,29 +1357,30 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/healthcheck",
+              "raw": "{{baseUrl}}/api/health",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "healthcheck"
+                "health"
               ]
             }
           }
         },
         {
-          "name": "Home",
+          "name": "Home Statistics",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/",
+              "raw": "{{baseUrl}}/api/home",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                ""
+                "api",
+                "home"
               ]
             }
           }
@@ -1124,6 +1402,10 @@
       "value": "22222222-2222-2222-2222-222222222222"
     },
     {
+      "key": "userId",
+      "value": "22222222-2222-2222-2222-222222222222"
+    },
+    {
       "key": "flightId",
       "value": "FL-0001"
     },
@@ -1137,11 +1419,15 @@
     },
     {
       "key": "seatId",
-      "value": "SEAT-1"
+      "value": "1"
     },
     {
       "key": "airplaneId",
       "value": "AP-123"
+    },
+    {
+      "key": "airlineId",
+      "value": "ABC"
     },
     {
       "key": "classFlightId",
