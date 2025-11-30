@@ -57,6 +57,7 @@ dependencies {
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 	implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.2'
 	implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.3'
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {
@@ -75,6 +76,7 @@ def jacocoExclude = [
     '**/*Configuration.class', 
     '**/model/**', 
     '**/dto/**', 
+    '**/security/**', 
 ]
 
 

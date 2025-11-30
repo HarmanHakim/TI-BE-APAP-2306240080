@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import io.harman.flight_be.service.HomeService;
@@ -23,6 +24,7 @@ import io.harman.flight_be.service.HomeService;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockUser(authorities = {"SUPERADMIN"})
 class HomeRestControllerTest {
 
     @Autowired
