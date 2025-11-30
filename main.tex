@@ -1,0 +1,830 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tcolorbox}
+\usepackage{fancyhdr}
+
+% Color definitions
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{methodget}{rgb}{0.0,0.5,0.0}
+\definecolor{methodpost}{rgb}{0.0,0.4,0.8}
+\definecolor{methodput}{rgb}{0.8,0.6,0.0}
+\definecolor{methoddelete}{rgb}{0.8,0.0,0.0}
+
+% Code listing style
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Flight \& Loyalty Service API}
+\lhead{\leftmark}
+\cfoot{\thepage}
+
+% Custom commands for HTTP methods
+\newcommand{\httpget}[1]{\textcolor{methodget}{\textbf{GET}} \texttt{#1}}
+\newcommand{\httppost}[1]{\textcolor{methodpost}{\textbf{POST}} \texttt{#1}}
+\newcommand{\httpput}[1]{\textcolor{methodput}{\textbf{PUT}} \texttt{#1}}
+\newcommand{\httpdelete}[1]{\textcolor{methoddelete}{\textbf{DELETE}} \texttt{#1}}
+
+\title{\Huge \textbf{Flight \& Loyalty Service}\\\Large API Documentation}
+\author{TI APAP 2025 - 2306240080}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+This document provides comprehensive API documentation for the Flight \& Loyalty Service backend application. The API follows RESTful principles and returns responses in JSON format.
+
+\subsection{Base URL}
+\begin{tcolorbox}[colback=blue!5!white,colframe=blue!75!black]
+\texttt{http://localhost:8080}
+\end{tcolorbox}
+
+\subsection{Response Format}
+All API responses follow a standard format:
+
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "message": "Success",
+  "timestamp": "2025-11-30T17:00:00",
+  "data": { ... }
+}
+\end{lstlisting}
+
+\newpage
+
+\section{Authentication}
+
+The API uses JWT (JSON Web Token) based authentication for most endpoints. Some endpoints are publicly accessible:
+
+\begin{itemize}
+    \item \texttt{/api/health} - Health check endpoint
+    \item \texttt{/api-docs/**} - API documentation
+    \item \texttt{/swagger-ui/**} - Swagger UI
+    \item \texttt{/api/loyalty/points} - Handled by API Key authentication
+    \item \texttt{/api/loyalty/coupons/redeem} - Handled by API Key authentication
+\end{itemize}
+
+\subsection{JWT Token}
+Include the JWT token in the Authorization header:
+
+\begin{lstlisting}
+Authorization: Bearer <your-jwt-token>
+\end{lstlisting}
+
+\newpage
+
+\section{Loyalty Management}
+
+\subsection{Get Available Coupons}
+\httpget{/api/loyalty/coupons}
+
+\textbf{Description:} Retrieve all available coupons for purchase.
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": [
+    {
+      "id": "uuid",
+      "name": "10% Off Flight",
+      "description": "Get 10% discount on your next flight",
+      "points": 100,
+      "percentOff": 10,
+      "createdDate": "2025-11-30T10:00:00",
+      "updatedDate": "2025-11-30T10:00:00"
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsection{Add Loyalty Points}
+\httppost{/api/loyalty/points}
+
+\textbf{Description:} Add loyalty points to a customer's account (API Key required).
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "customerId": "uuid",
+  "points": 250,
+  "reference": "BOOKING-12345"
+}
+\end{lstlisting}
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": {
+    "customerId": "uuid",
+    "points": 250
+  }
+}
+\end{lstlisting}
+
+\subsection{Get Customer Balance}
+\httpget{/api/loyalty/balance/\{userId\}}
+
+\textbf{Description:} Get the loyalty points balance for a specific user.
+
+\textbf{Path Parameters:}
+\begin{itemize}
+    \item \texttt{userId} (UUID, required) - The customer's user ID
+\end{itemize}
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": {
+    "customerId": "uuid",
+    "points": 500
+  }
+}
+\end{lstlisting}
+
+\subsection{Get Customer Dashboard}
+\httpget{/api/loyalty/dashboard/\{userId\}}
+
+\textbf{Description:} Get comprehensive loyalty dashboard data for a customer.
+
+\textbf{Path Parameters:}
+\begin{itemize}
+    \item \texttt{userId} (UUID, required) - The customer's user ID
+\end{itemize}
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": {
+    "customerId": "uuid",
+    "balance": { "customerId": "uuid", "points": 500 },
+    "purchasedCoupons": [...],
+    "availableCoupons": [...],
+    "totalPurchasedCoupons": 5,
+    "activeCoupons": 3,
+    "redeemedCoupons": 2,
+    "availableCouponCount": 10
+  }
+}
+\end{lstlisting}
+
+\subsection{Purchase Coupon}
+\httppost{/api/loyalty/coupons/purchase}
+
+\textbf{Description:} Purchase a coupon using loyalty points.
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "couponId": "uuid",
+  "customerId": "uuid"
+}
+\end{lstlisting}
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": {
+    "id": "uuid",
+    "code": "COUPON-CODE-123",
+    "couponId": "uuid",
+    "couponName": "10% Off Flight",
+    "points": 100,
+    "percentOff": 10,
+    "customerId": "uuid",
+    "purchasedDate": "2025-11-30T10:00:00",
+    "usedDate": null
+  }
+}
+\end{lstlisting}
+
+\subsection{Get Purchased Coupons}
+\httpget{/api/loyalty/coupons/purchased/\{userId\}}
+
+\textbf{Description:} Get all coupons purchased by a user.
+
+\textbf{Path Parameters:}
+\begin{itemize}
+    \item \texttt{userId} (UUID, required) - The customer's user ID
+\end{itemize}
+
+\subsection{Redeem Coupon}
+\httppost{/api/loyalty/coupons/redeem}
+
+\textbf{Description:} Redeem a purchased coupon (API Key required).
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "code": "COUPON-CODE-123",
+  "customerId": "uuid"
+}
+\end{lstlisting}
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": {
+    "code": "COUPON-CODE-123",
+    "customerId": "uuid",
+    "couponId": "uuid",
+    "percentOff": 10,
+    "valid": true
+  }
+}
+\end{lstlisting}
+
+\newpage
+
+\section{Coupon Management}
+
+\subsection{List All Coupons}
+\httpget{/api/coupons}
+
+\textbf{Description:} Get all coupons in the system (admin).
+
+\subsection{Get Coupon by ID}
+\httpget{/api/coupons/\{id\}}
+
+\textbf{Path Parameters:}
+\begin{itemize}
+    \item \texttt{id} (UUID, required) - Coupon ID
+\end{itemize}
+
+\subsection{Create Coupon}
+\httppost{/api/coupons}
+
+\textbf{Description:} Create a new coupon.
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "name": "10% Off Accessories",
+  "description": "Discount applicable to all accessory purchases",
+  "points": 100,
+  "percentOff": 10
+}
+\end{lstlisting}
+
+\subsection{Update Coupon}
+\httpput{/api/coupons/\{id\}}
+
+\textbf{Path Parameters:}
+\begin{itemize}
+    \item \texttt{id} (UUID, required) - Coupon ID
+\end{itemize}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "name": "15% Off Accessories",
+  "description": "Updated discount amount",
+  "points": 120,
+  "percentOff": 15
+}
+\end{lstlisting}
+
+\subsection{Delete Coupon}
+\httpdelete{/api/coupons/\{id\}}
+
+\textbf{Path Parameters:}
+\begin{itemize}
+    \item \texttt{id} (UUID, required) - Coupon ID
+\end{itemize}
+
+\newpage
+
+\section{Flight Management}
+
+\subsection{List All Flights}
+\httpget{/api/flights/all}
+
+\textbf{Description:} Get all flights with optional filters.
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{origin} (string, optional) - Origin airport code
+    \item \texttt{destination} (string, optional) - Destination airport code
+    \item \texttt{departureDate} (datetime, optional) - Departure date filter
+    \item \texttt{airlineId} (string, optional) - Airline ID
+    \item \texttt{status} (integer, optional) - Flight status (1-5)
+\end{itemize}
+
+\subsection{Get Flight by ID}
+\httpget{/api/flights/\{id\}}
+
+\textbf{Path Parameters:}
+\begin{itemize}
+    \item \texttt{id} (string, required) - Flight ID
+\end{itemize}
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": {
+    "id": "FL-001",
+    "airlineId": "ABC",
+    "airlineName": "Acme Air",
+    "airplaneId": "AP-123",
+    "airplaneModel": "Boeing 737",
+    "originAirportCode": "JFK",
+    "destinationAirportCode": "LAX",
+    "departureTime": "2026-01-15T10:00:00",
+    "arrivalTime": "2026-01-15T14:00:00",
+    "terminal": "1",
+    "gate": "A1",
+    "baggageAllowance": 1,
+    "facilities": "WiFi, In-flight entertainment",
+    "status": 1,
+    "statusLabel": "Scheduled",
+    "classes": [...]
+  }
+}
+\end{lstlisting}
+
+\subsection{Create Flight}
+\httppost{/api/flights/create}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "airlineId": "ABC",
+  "airplaneId": "AP-123",
+  "originAirportCode": "JFK",
+  "destinationAirportCode": "LAX",
+  "departureTime": "2026-01-15T10:00:00",
+  "arrivalTime": "2026-01-15T14:00:00",
+  "terminal": "1",
+  "gate": "A1",
+  "baggageAllowance": 1,
+  "facilities": "WiFi, In-flight entertainment",
+  "status": 1
+}
+\end{lstlisting}
+
+\subsection{Update Flight}
+\httpput{/api/flights/\{id\}/update}
+
+\subsection{Cancel Flight}
+\httpdelete{/api/flights/\{id\}/delete}
+
+\subsection{Get Upcoming Flights}
+\httpget{/api/flights/upcoming}
+
+\textbf{Description:} Get all upcoming flights.
+
+\subsection{Get Flights Departing Today}
+\httpget{/api/flights/today}
+
+\subsection{Get Flights with Available Seats}
+\httpget{/api/flights/available}
+
+\subsection{Get Flight Reminders}
+\httpget{/api/flights/reminder}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{interval} (integer, optional) - Minutes before departure
+    \item \texttt{customerId} (string, optional) - Filter by customer
+\end{itemize}
+
+\newpage
+
+\section{Booking Management}
+
+\subsection{List All Bookings}
+\httpget{/api/bookings}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{isActive} (boolean, optional)
+    \item \texttt{status} (integer, optional) - Booking status (1-4)
+    \item \texttt{email} (string, optional) - Contact email filter
+\end{itemize}
+
+\subsection{Get Booking by ID}
+\httpget{/api/bookings/\{id\}}
+
+\subsection{Create Booking}
+\httppost{/api/bookings/create}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "flightId": "FL-001",
+  "classFlightId": 1,
+  "contactEmail": "user@example.com",
+  "contactPhone": "+1234567890",
+  "passengerCount": 1,
+  "totalPrice": 150.00,
+  "status": 1,
+  "passengerIds": ["uuid"]
+}
+\end{lstlisting}
+
+\subsection{Update Booking}
+\httpput{/api/bookings/\{id\}/update}
+
+\subsection{Cancel Booking}
+\httpdelete{/api/bookings/\{id\}/delete}
+
+\subsection{Get Booking Statistics}
+\httpget{/api/bookings/statistics}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{start} (datetime, required) - Start date
+    \item \texttt{end} (datetime, required) - End date
+\end{itemize}
+
+\newpage
+
+\section{Passenger Management}
+
+\subsection{List All Passengers}
+\httpget{/api/passengers/all}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{gender} (integer, optional) - Gender filter (1-3)
+    \item \texttt{name} (string, optional) - Name filter
+    \item \texttt{email} (string, optional) - Email filter
+    \item \texttt{age} (integer, optional) - Age filter
+\end{itemize}
+
+\subsection{Get Passenger by ID}
+\httpget{/api/passengers/\{id\}}
+
+\subsection{Create Passenger}
+\httppost{/api/passengers/create}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "fullName": "John Doe",
+  "birthDate": "1990-05-20",
+  "gender": 1,
+  "idPassport": "A12345678"
+}
+\end{lstlisting}
+
+\subsection{Update Passenger}
+\httpput{/api/passengers/\{id\}/update}
+
+\subsection{Delete Passenger}
+\httpdelete{/api/passengers/\{id\}/delete}
+
+\newpage
+
+\section{Seat Management}
+
+\subsection{List All Seats}
+\httpget{/api/seats/all}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{classFlightId} (integer, optional)
+    \item \texttt{isAvailable} (boolean, optional)
+\end{itemize}
+
+\subsection{Get Available Seats}
+\httpget{/api/seats/available}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{classFlightId} (integer, required)
+\end{itemize}
+
+\subsection{Get Seat by ID}
+\httpget{/api/seats/\{id\}}
+
+\subsection{Create Seat}
+\httppost{/api/seats/create}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "classFlightId": 1,
+  "seatNumber": "12A",
+  "passengerId": "uuid"
+}
+\end{lstlisting}
+
+\subsection{Assign Seat}
+\httppost{/api/seats/\{id\}/assign}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{passengerId} (UUID, required)
+    \item \texttt{classFlightId} (integer, required)
+\end{itemize}
+
+\subsection{Release Seat}
+\httppost{/api/seats/\{id\}/release}
+
+\subsection{Update Seat}
+\httpput{/api/seats/\{id\}/update}
+
+\subsection{Delete Seat}
+\httpdelete{/api/seats/\{id\}/delete}
+
+\newpage
+
+\section{Airplane Management}
+
+\subsection{List All Airplanes}
+\httpget{/api/airplanes/all}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{airlineId} (string, optional)
+    \item \texttt{model} (string, optional)
+    \item \texttt{manufactureYear} (integer, optional)
+    \item \texttt{isDeleted} (boolean, optional)
+\end{itemize}
+
+\subsection{Get Airplane by ID}
+\httpget{/api/airplanes/\{id\}}
+
+\subsection{Create Airplane}
+\httppost{/api/airplanes/create}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "airlineId": "ABC",
+  "model": "Boeing 737",
+  "seatCapacity": 180,
+  "manufactureYear": 2015
+}
+\end{lstlisting}
+
+\subsection{Update Airplane}
+\httpput{/api/airplanes/\{id\}/update}
+
+\subsection{Delete Airplane}
+\httpdelete{/api/airplanes/\{id\}/delete}
+
+\subsection{Activate Airplane}
+\httppost{/api/airplanes/\{id\}/activate}
+
+\textbf{Description:} Reactivate a previously deleted airplane.
+
+\newpage
+
+\section{Airline Management}
+
+\subsection{List All Airlines}
+\httpget{/api/airlines/all}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{country} (string, optional) - Filter by country
+\end{itemize}
+
+\subsection{Get Airline by ID}
+\httpget{/api/airlines/\{id\}}
+
+\subsection{Create Airline}
+\httppost{/api/airlines/create}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "id": "ABC",
+  "name": "Acme Air",
+  "country": "USA"
+}
+\end{lstlisting}
+
+\subsection{Update Airline}
+\httpput{/api/airlines/\{id\}/update}
+
+\subsection{Delete Airline}
+\httpdelete{/api/airlines/\{id\}/delete}
+
+\subsection{Search Airlines}
+\httpget{/api/airlines/search}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{name} (string, required) - Search by airline name
+\end{itemize}
+
+\subsection{Get Distinct Countries}
+\httpget{/api/airlines/countries}
+
+\textbf{Description:} Get a list of all countries that have airlines in the system.
+
+\newpage
+
+\section{Class Flight Management}
+
+\subsection{List All Class Flights}
+\httpget{/api/class-flights/all}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{flightId} (string, optional)
+\end{itemize}
+
+\subsection{Get Class Flight by ID}
+\httpget{/api/class-flights/\{id\}}
+
+\subsection{Get Available Class Flights}
+\httpget{/api/class-flights/available}
+
+\textbf{Query Parameters:}
+\begin{itemize}
+    \item \texttt{flightId} (string, required)
+\end{itemize}
+
+\subsection{Create Class Flight}
+\httppost{/api/class-flights/create}
+
+\textbf{Request Body:}
+\begin{lstlisting}[language=json]
+{
+  "flightId": "FL-001",
+  "classType": "Economy",
+  "seatCapacity": 100,
+  "price": 150.00
+}
+\end{lstlisting}
+
+\subsection{Update Class Flight}
+\httpput{/api/class-flights/\{id\}/update}
+
+\subsection{Delete Class Flight}
+\httpdelete{/api/class-flights/\{id\}/delete}
+
+\newpage
+
+\section{Utility Endpoints}
+
+\subsection{Health Check}
+\httpget{/api/health}
+
+\textbf{Description:} Check if the service is running.
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+"OK"
+\end{lstlisting}
+
+\subsection{Home Statistics}
+\httpget{/api/home}
+
+\textbf{Description:} Get home page statistics.
+
+\textbf{Response:}
+\begin{lstlisting}[language=json]
+{
+  "status": 200,
+  "data": {
+    "totalFlights": 100,
+    "totalBookings": 500,
+    "totalPassengers": 1000
+  }
+}
+\end{lstlisting}
+
+\newpage
+
+\section{Data Models}
+
+\subsection{Status Codes}
+
+\subsubsection{Flight Status}
+\begin{itemize}
+    \item 1 - Scheduled
+    \item 2 - Boarding
+    \item 3 - Departed
+    \item 4 - Arrived
+    \item 5 - Cancelled
+\end{itemize}
+
+\subsubsection{Booking Status}
+\begin{itemize}
+    \item 1 - Pending
+    \item 2 - Confirmed
+    \item 3 - Paid
+    \item 4 - Cancelled
+\end{itemize}
+
+\subsubsection{Gender}
+\begin{itemize}
+    \item 1 - Male
+    \item 2 - Female
+    \item 3 - Other
+\end{itemize}
+
+\subsection{Common Fields}
+
+Most entities include the following timestamp fields:
+\begin{itemize}
+    \item \texttt{createdAt} - Entity creation timestamp
+    \item \texttt{updatedAt} - Last update timestamp
+    \item \texttt{isDeleted} - Soft delete flag (boolean)
+\end{itemize}
+
+\newpage
+
+\section{Error Handling}
+
+\subsection{Error Response Format}
+
+All errors follow a standard format:
+
+\begin{lstlisting}[language=json]
+{
+  "status": 400,
+  "message": "Error description",
+  "timestamp": "2025-11-30T17:00:00",
+  "data": null
+}
+\end{lstlisting}
+
+\subsection{Common HTTP Status Codes}
+
+\begin{itemize}
+    \item \textbf{200 OK} - Request successful
+    \item \textbf{400 Bad Request} - Invalid request parameters
+    \item \textbf{401 Unauthorized} - Missing or invalid authentication
+    \item \textbf{403 Forbidden} - Insufficient permissions
+    \item \textbf{404 Not Found} - Resource not found
+    \item \textbf{500 Internal Server Error} - Server error
+\end{itemize}
+
+\newpage
+
+\section{Appendix}
+
+\subsection{Postman Collection}
+
+A complete Postman collection is available at:
+\begin{tcolorbox}[colback=gray!5!white,colframe=gray!75!black]
+\texttt{flight\_loyalty.postman\_collection.json}
+\end{tcolorbox}
+
+\subsection{OpenAPI Specification}
+
+The OpenAPI 3.1.0 specification is available at:
+\begin{tcolorbox}[colback=gray!5!white,colframe=gray!75!black]
+\texttt{http://localhost:8080/api-docs}
+\end{tcolorbox}
+
+\subsection{Swagger UI}
+
+Interactive API documentation is available at:
+\begin{tcolorbox}[colback=gray!5!white,colframe=gray!75!black]
+\texttt{http://localhost:8080/swagger-ui.html}
+\end{tcolorbox}
+
+\subsection{Contact}
+
+For questions or issues, please contact the development team.
+
+\end{document}
